@@ -4,6 +4,9 @@
 
 ## Overview
 
+IMPORTANT: because SNAP.py uses Python 2.7, we use Python 2.7 in this
+project as well.
+
 This repo houses code that experiments with how graph-based recommender systems
 react under Adversarial pressure. We use a variant of the Pixie
 algorithm to recommend items to users on
@@ -23,13 +26,17 @@ and documentation files live in the outer level of the repo.
     instantiating them as graphs.
     - `gbra/feature_extraction`: contains classes and routines for extracting
     features from graphs.
-    - `gbra/experiments`: experiment scripts.  To maintain some order on the
-    repo, make a new python file for each separate experiment you plan to run,
-    then run it as `python experiments/<experiment name>.py` from `gbra/`
 
-- Utility logic for each submodule lives in `gbra/*/utils.py`.
-- Utility logic shared across two or more submodules lives in `gbra/utils.py`.
+- `*_exp.py`: experiment files.  To maintain some order on the
+repo, make a new python file for each separate experiment you plan to run,
+then run it as `python <experiment name>_exp.py` from `gbra/`. Add
+all graphing code to its corresponding experiment file.
+- Utility logic for each submodule lives in `gbra/util/<submodule>_utils.py`.
+- Global utilities live at `gbra/utils/utils.py`.
 
 ## Quick Start
 
-TODO
+ 1. Create a Python 2 virtual environment and activate it.
+ 2. Install SNAP from within that virtual environment
+ 3. `python sample_exp.py`
+ 4. Profit
