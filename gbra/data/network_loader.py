@@ -67,7 +67,6 @@ class NetworkLoader(object):
                 NUM_ITEMS, and NUM_EDGES chosen uniformly at random between
                 entities and items.
         """
-
         if num_edges > num_entities * num_items:
             raise ValueError("More edges requested than possible.")
 

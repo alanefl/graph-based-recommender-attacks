@@ -105,8 +105,40 @@ class RandomRecommender(BaseRecommender):
         return recommendations
 
 class BasicRandomWalkRecommender(BaseRecommender):
-    # TODO
-    pass
+    """Recommender basic random walk recommendations.  Based on
+    Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
+    """
+
+    def __init__(self, G, num_steps_in_walk=10, alpha=0.5):
+        """
+        :param - G: snap graph to use in this recommender.
+        :param - num_steps_in_walk: N in Eskombatchai et al
+        :param - alpha: alpha in Eskombatchai et al
+        """
+        self._num_steps_in_walk = num_steps_in_walk
+        self._alpha = alpha
+        super(BasicRandomWalkRecommender, self).__init__(G)
+
+    def _sample_walk_length(self):
+        """Returns the walk length to carry out, based on alphaself.
+        This function is not clarified in Eskombatchai et al, 2017. It is likely
+        the walk length sampling logic is a trade secret.
+
+        The approach here is as follows:
+
+        """
+        pass
+
+    def _do_random_walk(self, start_entity):
+        V = {} # Maps items to the number of times we've seen them in random walks.
+        totSteps = 0
+        while totSteps >= self._num_steps_in_walk:
+            curr_entity = start_entity
+            curr_steps = self._sample_walk_length()
+        pass
+
+    def recommend(self, entity_id, number_of_items):
+        return None
 
 class PixieRecommender(BaseRecommender):
     # TODO
