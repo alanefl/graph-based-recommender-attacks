@@ -33,7 +33,7 @@ class NetworkLoader(object):
         G.AddEdge(1, 2)
         G.AddEdge(1, 4)
         G.AddEdge(1, 6)
-        G.AddEdge(3, 2)
+        G.AddEdge(3, 8)
         G.AddEdge(5, 4)
         G.AddEdge(5, 8)
         G.AddEdge(7, 6)

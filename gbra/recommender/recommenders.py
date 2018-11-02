@@ -110,7 +110,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
     Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
     """
 
-    def __init__(self, G, num_steps_in_walk=10, alpha=0.5):
+    def __init__(self, G, num_steps_in_walk=10, alpha=0.5, verbose=False):
         """
         :param - G: snap graph to use in this recommender.
         :param - num_steps_in_walk: N in Eskombatchai et al. The number of steps
@@ -124,6 +124,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
 
         self._num_steps_in_walk = num_steps_in_walk
         self._alpha = alpha
+        self._verbose = verbose
         super(BasicRandomWalkRecommender, self).__init__(G)
 
     def _sample_walk_length(self):
@@ -149,9 +150,14 @@ class BasicRandomWalkRecommender(BaseRecommender):
     def _do_basic_random_walk(self, start_entity):
         V = {} # Maps items to the number of times we've seen them in random walks.
         tot_steps = 0
+
+        if self._verbose:
+            print("Starting random walks from entity: %d" % start_entity)
+
         while tot_steps < self._num_steps_in_walk:
             curr_entity = self._G.GetNI(start_entity)
             curr_steps = self._sample_walk_length()
+            walk = [str(start_entity)]
 
             # Let's not go beyond tot_steps.
             curr_steps = min(curr_steps, self._num_steps_in_walk - tot_steps)
@@ -161,13 +167,18 @@ class BasicRandomWalkRecommender(BaseRecommender):
             for step in range(curr_steps):
                 if step != 0:
                     curr_entity = get_random_neighbor(self._G, curr_item)
+                    walk.append(str(curr_entity.GetId()))
 
                 curr_item = get_random_neighbor(self._G, curr_entity)
+                walk.append(str(curr_item.GetId()))
                 curr_item_id = curr_item.GetId()
 
                 if curr_item_id not in V:
                     V[curr_item_id] = 0
                 V[curr_item_id] += 1
+
+            if self._verbose:
+                print(' -> '.join(walk))
 
             tot_steps += curr_steps
         return V
@@ -181,6 +192,10 @@ class BasicRandomWalkRecommender(BaseRecommender):
         # Do random walk.  V maps item ids to number of times the item was
         # seen in a random walk.
         V = self._do_basic_random_walk(entity_id)
+        if self._verbose:
+            print("Random walk counts:")
+            print(V)
+            print("")
         entity_neighbor_ids = [e for e in self._G.GetNI(entity_id).GetOutEdges()]
 
         # Represent V as a list of pairs (k, v) reverse sorted by v.

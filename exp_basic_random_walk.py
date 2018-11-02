@@ -7,7 +7,9 @@ print("Experiment: Basic Random Walk Tester\n\n")
 # Tiny Test with basic random walk.
 loader = NetworkLoader()
 tiny_network = loader.load_network("tiny_test")
-recommender = BasicRandomWalkRecommender(tiny_network)
+recommender = BasicRandomWalkRecommender(
+    tiny_network, num_steps_in_walk=50, alpha=0.15
+)
 recs_for_3 = recommender.recommend(entity_id=3, number_of_items=3)
 recs_for_5 = recommender.recommend(entity_id=5, number_of_items=2)
 
