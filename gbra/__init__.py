@@ -1,3 +1,4 @@
+import random
 import snap
 import numpy as np
 
@@ -7,3 +8,6 @@ Rnd.Randomize()
 
 # Seed NumPy
 np.random.seed(1337)
+
+# Seed random
+random.seed(1337)
