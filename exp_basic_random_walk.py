@@ -1,7 +1,8 @@
 
-from gbra.recommender.recommenders import RandomRecommender
+from gbra.recommender.recommenders import BasicRandomWalkRecommender
 from gbra.data.network_loader import NetworkLoader
 
+print("Experiment: Basic Random Walk Tester\n\n")
 
 # Tiny Test with basic random walk.
 loader = NetworkLoader()
