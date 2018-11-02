@@ -58,6 +58,10 @@ class NetworkLoader(object):
         :param - num_items: number of items to include
         :param - num_edges: the number of edges desired.
 
+        TODO: this will take a long time if num_edges is close
+        to num_items/num_entities. If we need to make graphs like this in
+        the future, please update my logic :)
+
         return type: snap.PUNGraph
         return: Erdos-Renyi graph bipartite graph with NUM_ENTITIES,
                 NUM_ITEMS, and NUM_EDGES chosen uniformly at random between
