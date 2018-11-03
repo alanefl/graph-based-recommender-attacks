@@ -19,15 +19,17 @@ print("Random recommendations for 5: %s" % str(recs_for_5))
 print("---")
 
 # Erdos-renyi bipartite graph with basic random walk.
-# loader = NetworkLoader()
-# er_network = loader.get_erdos_renyi_bipartite_graph(num_entities=20, num_items=50, num_edges=60)
-# recommender = RandomRecommender(er_network)
-# recs_for_15 = recommender.recommend(entity_id=15, number_of_items=3)
-# recs_for_21 = recommender.recommend(entity_id=21, number_of_items=5)
-#
-# print("Erdos Renyi:")
-# print("Random recommendations for 15: %s" % str(rec s_for_15))
-# print("Random recommendations for 21: %s" % str(recs_for_21))
-#
-# assert(er_network.GetNodes() == 20 + 50)
-# assert(er_network.GetEdges() == 60)
+loader = NetworkLoader()
+er_network = loader.get_erdos_renyi_bipartite_graph(num_entities=100, num_items=1000, num_edges=600)
+recommender = BasicRandomWalkRecommender(
+    er_network, num_steps_in_walk=400, alpha=0.15
+)
+recs_for_15 = recommender.recommend(entity_id=15, number_of_items=3)
+recs_for_21 = recommender.recommend(entity_id=21, number_of_items=5)
+
+print("Erdos Renyi:")
+print("Random recommendations for 15: %s" % str(recs_for_15))
+print("Random recommendations for 21: %s" % str(recs_for_21))
+
+assert(er_network.GetNodes() == 100 + 1000)
+assert(er_network.GetEdges() == 60)
