@@ -41,6 +41,14 @@ def graph_node_is_item(nodeId):
 def graph_node_is_entity(nodeId):
     return nodeId % 2 == 1
 
+def get_neighbors(G, node):
+    """Returns a list containing the node IDs of the neighbors
+    of "node"
+    """
+    if type(node) == int:
+        node = G.GetNI(node)
+    return [e for e in node.GetOutEdges()]
+
 def get_random_neighbor(G, node):
     """Returns a random neighbor of node in G as a Snap Node.
 
