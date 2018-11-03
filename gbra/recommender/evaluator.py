@@ -22,7 +22,7 @@ each score by the degree of an entity.
 import numpy as np
 import snap
 
-from gbra.util.utils import *
+from gbra.util.ei_graph import EIGraph
 from gbra.util.asserts import *
 
 class RecEvaluator(object):
@@ -50,7 +50,7 @@ class RecEvaluator(object):
         """
         G = self._recommender._G
         if neighbors is None:
-            neighbors = get_neighbors(G, entity_id)
+            neighbors = G.get_neighbors(entity_id)
 
         if len(neighbors) < 1:
             # If this neighbor only has a single edge to another item,
