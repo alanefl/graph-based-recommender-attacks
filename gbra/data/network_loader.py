@@ -33,7 +33,7 @@ class NetworkLoader(object):
         G.AddEdge(1, 2)
         G.AddEdge(1, 4)
         G.AddEdge(1, 6)
-        G.AddEdge(3, 2)
+        G.AddEdge(3, 8)
         G.AddEdge(5, 4)
         G.AddEdge(5, 8)
         G.AddEdge(7, 6)
@@ -67,7 +67,6 @@ class NetworkLoader(object):
                 NUM_ITEMS, and NUM_EDGES chosen uniformly at random between
                 entities and items.
         """
-
         if num_edges > num_entities * num_items:
             raise ValueError("More edges requested than possible.")
 
