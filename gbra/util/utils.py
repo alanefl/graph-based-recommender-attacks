@@ -52,8 +52,10 @@ def get_neighbors(G, node):
 def get_random_neighbor(G, node):
     """Returns a random neighbor of node in G as a Snap Node.
 
+    Assumes that the node has at least one neighbor.
+
     Node can be a snap node or an int ID.
     """
     if type(node) == int:
         node = G.GetNI(node)
-    return G.GetNI(random.choice([e for e in node.GetOutEdges()]))
+    return G.GetNI(random.choice(list(node.GetOutEdges())))

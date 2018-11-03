@@ -204,8 +204,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
         # Build recommendations.  Only add an item if the entity did
         # not already have an edge to that item.
         recommendations = []
-        for i in range(len(V_)):
-            item_id, _ = V_[i]
+        for item_id, _ in V_:
             if item_id not in entity_neighbor_ids:
                 recommendations.append(item_id)
             if len(recommendations) >= number_of_items:
