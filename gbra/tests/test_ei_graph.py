@@ -1,5 +1,7 @@
 
+import tempfile
 import unittest
+
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -24,6 +26,23 @@ class TestEIGraph(unittest.TestCase):
         G.add_edge(1, 2)
 
         self.assertEqual(1, G.base().GetEdges())
+
+    def test_save_load(self):
+        graph = EIGraph(2, 2)
+        graph.add_edge(1, 2)
+        graph.add_edge(1, 4)
+        graph.add_edge(3, 2)
+
+        with tempfile.NamedTemporaryFile(delete=True) as temp_f:
+            graph.save(temp_f.name)
+            graph = EIGraph.load(temp_f.name)
+
+        self.assertEqual(graph.num_entities, 2)
+        self.assertEqual(graph.num_items, 2)
+        self.assertTrue(graph.is_edge(1, 2))
+        self.assertTrue(graph.is_edge(1, 4))
+        self.assertTrue(graph.is_edge(3, 2))
+        self.assertTrue(graph.base().GetNodes(), 4)
 
 if __name__ == '__main__':
     unittest.main()
