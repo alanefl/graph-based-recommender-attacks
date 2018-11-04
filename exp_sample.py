@@ -26,5 +26,5 @@ print("Erdos Renyi:")
 print("Random recommendations for 15: %s" % str(recs_for_15))
 print("Random recommendations for 21: %s" % str(recs_for_21))
 
-assert(er_network.GetNodes() == 20 + 50)
-assert(er_network.GetEdges() == 60)
+assert(er_network.base().GetNodes() == 20 + 50)
+assert(er_network.base().GetEdges() == 60)

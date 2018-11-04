@@ -5,6 +5,8 @@ Classes and routines for loading SNAP networks
 import snap
 import random
 
+from gbra.util.ei_graph import EIGraph
+
 class NetworkLoader(object):
     """Loads bipartite entity-item network for our research project.
 
@@ -26,22 +28,19 @@ class NetworkLoader(object):
         11 -> [10]
 
         """
-        G = snap.TUNGraph.New()
-        for i in range(1, 12):
-            G.AddNode(i)
-
-        G.AddEdge(1, 2)
-        G.AddEdge(1, 4)
-        G.AddEdge(1, 6)
-        G.AddEdge(3, 8)
-        G.AddEdge(5, 4)
-        G.AddEdge(5, 8)
-        G.AddEdge(7, 6)
-        G.AddEdge(7, 8)
-        G.AddEdge(7, 10)
-        G.AddEdge(9, 2)
-        G.AddEdge(9, 10)
-        G.AddEdge(11, 10)
+        G = EIGraph(6, 5)
+        G.add_edge(1, 2)
+        G.add_edge(1, 4)
+        G.add_edge(1, 6)
+        G.add_edge(3, 8)
+        G.add_edge(5, 4)
+        G.add_edge(5, 8)
+        G.add_edge(7, 6)
+        G.add_edge(7, 8)
+        G.add_edge(7, 10)
+        G.add_edge(9, 2)
+        G.add_edge(9, 10)
+        G.add_edge(11, 10)
 
         return G
 
@@ -70,19 +69,14 @@ class NetworkLoader(object):
         if num_edges > num_entities * num_items:
             raise ValueError("More edges requested than possible.")
 
-        Graph = snap.TUNGraph.New()
-        for i in range(num_entities):
-            Graph.AddNode(2 * i + 1)
-
-        for i in range(num_items):
-            Graph.AddNode(2 * i)
-
+        Graph = EIGraph(num_entities=num_entities, num_items=num_items)
         edges_left = num_edges
         while edges_left > 0:
             entity_node_id = 2 * random.randint(0, num_entities - 1) + 1
             item_node_id = 2 * random.randint(0, num_items - 1)
-            if not Graph.IsEdge(entity_node_id, item_node_id):
+            if not Graph.is_edge(entity_node_id, item_node_id):
                 edges_left -= 1
-                Graph.AddEdge(entity_node_id, item_node_id)
+                print entity_node_id, item_node_id
+                Graph.add_edge(entity_node_id, item_node_id)
 
         return Graph

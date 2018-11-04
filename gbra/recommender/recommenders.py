@@ -15,7 +15,7 @@ import random
 import numpy as np
 
 from abc import abstractmethod
-from gbra.util.utils import *
+from gbra.util.ei_graph import EIGraph
 from gbra.util.asserts import *
 from gbra import Rnd
 
@@ -40,7 +40,7 @@ class BaseRecommender(object):
         """
         assert_node_is_entity(entity_id)
 
-        if self._G.IsNode(entity_id):
+        if self._G.has_entity(entity_id):
             raise ValueError(
                 "Attacker can't add existing entity with id: %d." % entity_id
             )
@@ -83,11 +83,11 @@ class RandomRecommender(BaseRecommender):
     """Recommender that returns random recommendations
     """
     def recommend(self, entity_id, number_of_items):
-        if not self._G.IsNode(entity_id):
+        if not self._G.has_entity(entity_id):
             raise ValueError("Node with id %d is not in the graph." % entity_id)
 
-        graph_items = get_graph_items(self._G)
-        entity_node = self._G.GetNI(entity_id)
+        graph_items = self._G.get_items()
+        entity_node = self._G.base().GetNI(entity_id)
         entity_neighbors = [
             neighborItem for neighborItem in entity_node.GetOutEdges()
         ]
@@ -155,7 +155,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
             print("Starting random walks from entity: %d" % start_entity)
 
         while tot_steps < self._num_steps_in_walk:
-            curr_entity = self._G.GetNI(start_entity)
+            curr_entity = self._G.base().GetNI(start_entity)
             curr_steps = self._sample_walk_length()
             walk = [str(start_entity)]
 
@@ -196,7 +196,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
             print("Random walk counts:")
             print(V)
             print("")
-        entity_neighbor_ids = [e for e in self._G.GetNI(entity_id).GetOutEdges()]
+        entity_neighbor_ids = list(self._G.base().GetNI(entity_id).GetOutEdges())
 
         # Represent V as a list of pairs (k, v) reverse sorted by v.
         V_ = sorted(V.items(), key=lambda x: x[1], reverse=True)
