@@ -29,36 +29,29 @@ class BaseRecommender(object):
         self._G = G
         self._attacker_nodes = set()
 
-    def _attacker_add_entity(self, entity_id):
+    def _attacker_add_entity(self):
         """Adds a new entity to the graph G.
 
-        Raises an error if a node with the given entity_id already
-        exists in the graph G.
-
-        :param entity_id: the id of the new entity to create.
         :returns: the newly-created node.
         """
-        assert_node_is_entity(entity_id)
-
-        if self._G.has_entity(entity_id):
-            raise ValueError(
-                "Attacker can't add existing entity with id: %d." % entity_id
-            )
-        self._G.AddNode(entity_id)
+        entity_id = self._G.add_entity()
         self._attacker_nodes.add(entity_id)
+        return entity_id
 
-    def _attacker_add_edge(self, entity_id, item_id):
+    def _attacker_add_edge(self, entity_id, item_id, weight):
         """Adds an edge from an attacker-controlled entity to any
         other item.  Does not check whether the edge already exists.
 
         Raises an error if the entity is not owned by the attacker.
+
+        TODO: Save weight
 
         :param entity_id: the id of the entity (one end of the edge to add)
         :param item_id: the id of the item (the other end of the edge to add)
         :return: returns the newly-created edge.
         """
         assert_node_is_entity(entity_id)
-        assert_node_is_item(entity_id)
+        assert_node_is_item(item_id)
 
         assert_node_exists(entity_id, self._G)
         assert_node_exists(item_id, self._G)
@@ -68,7 +61,7 @@ class BaseRecommender(object):
                 "Attacker added edge from forbidden entity: %d" % entity_id
             )
 
-        self._G.AddEdge(entity_id, item_id)
+        self._G.add_edge(entity_id, item_id, weight = weight)
 
     @abstractmethod
     def recommend(self, entity_id, number_of_items):
