@@ -52,6 +52,11 @@ class EIGraph(object):
         res = self._G.AddEdge(nid1, nid2)
         assert res == -1, res
 
+    def del_edge(self, nid1, nid2):
+        """Removes an edge between nodes with IDs `nid1` and `nid2`."""
+        assert self.nid_is_entity(nid1) != self.nid_is_entity(nid2)
+        self._G.DelEdge(nid1, nid2)
+
     def is_edge(self, nid1, nid2):
         """Returns whether there is an edge between nodes with IDs `nid1`
         and `nid2`.
