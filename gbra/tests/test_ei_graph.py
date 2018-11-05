@@ -5,7 +5,6 @@ import unittest
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
-print sys.path
 from gbra.util.ei_graph import EIGraph
 
 class TestEIGraph(unittest.TestCase):

@@ -3,6 +3,7 @@ Classes and routines for loading SNAP networks
 """
 
 import abc
+import os
 import snap
 import random
 
@@ -84,3 +85,21 @@ class ErdosRenyiLoader(NetworkLoader):
                 Graph.add_edge(entity_node_id, item_node_id)
 
         return Graph
+
+class DataFileLoader(NetworkLoader):
+
+    def __init__(self, filename):
+        filename = os.path.join(os.path.dirname(__file__), filename)
+        self.filename = filename
+        if not os.path.exists(filename):
+            raise Exception(
+                "{} does not exist, please load the corresponding data "
+                "via gbra/data/scripts/".format(filename))
+
+    def load(self):
+        return EIGraph.load(self.filename)
+
+class MovielensLoader(DataFileLoader):
+
+    def __init__(self):
+        super(MovielensLoader, self).__init__('movielens.graph')
