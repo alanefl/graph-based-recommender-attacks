@@ -1,13 +1,16 @@
 
+import unittest
+
 from gbra.recommender.recommenders import BasicRandomWalkRecommender
 from gbra.recommender.evaluator import RecEvaluator
-from gbra.data.network_loader import NetworkLoader
+from gbra.data.network_loader import TinyTestLoader, ErdosRenyiLoader
+
+T = unittest.TestCase('__init__')
 
 print("Experiment: Basic Random Walk Tester\n\n")
 
 # Tiny Test with basic random walk.
-loader = NetworkLoader()
-tiny_network = loader.load_network("tiny_test")
+tiny_network = TinyTestLoader().load()
 recommender = BasicRandomWalkRecommender(
     tiny_network, num_steps_in_walk=50, alpha=0.25
 )
@@ -22,10 +25,10 @@ print("Evaluation score for tiny test: %f" % tiny_evaluator.evaluate_all())
 print("---")
 
 # Erdos-renyi bipartite graph with basic random walk.
-loader = NetworkLoader()
-er_network = loader.get_erdos_renyi_bipartite_graph(
+loader = ErdosRenyiLoader(
     num_entities=100, num_items=1000, num_edges=600
 )
+er_network = loader.load()
 recommender = BasicRandomWalkRecommender(
     er_network, num_steps_in_walk=400, alpha=0.05
 )
@@ -38,5 +41,6 @@ print("Random recommendations for 15: %s" % str(recs_for_15))
 print("Random recommendations for 21: %s" % str(recs_for_21))
 print("Evaluation score for ER: %f" % er_evaluator.evaluate_all())
 
-assert(er_network.GetNodes() == 100 + 1000)
-assert(er_network.GetEdges() == 600)
+T.assertEqual(er_network.num_entities, 100)
+T.assertEqual(er_network.num_items, 1000)
+T.assertEqual(er_network.base().GetEdges(), 600)

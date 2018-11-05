@@ -166,10 +166,10 @@ class BasicRandomWalkRecommender(BaseRecommender):
             # curr_item contains the SNAP node of the last traversed item.
             for step in range(curr_steps):
                 if step != 0:
-                    curr_entity = get_random_neighbor(self._G, curr_item)
+                    curr_entity = self._G.get_random_neighbor(curr_item)
                     walk.append(str(curr_entity.GetId()))
 
-                curr_item = get_random_neighbor(self._G, curr_entity)
+                curr_item = self._G.get_random_neighbor(curr_entity)
                 walk.append(str(curr_item.GetId()))
                 curr_item_id = curr_item.GetId()
 

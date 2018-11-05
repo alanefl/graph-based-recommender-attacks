@@ -58,7 +58,7 @@ class RecEvaluator(object):
             return None
         hits = 0.0
         for neighbor in neighbors:
-            G.DelEdge(entity_id, neighbor)
+            G.del_edge(entity_id, neighbor)
             recommendations = self._recommender.recommend(
                 entity_id, self._num_recs
             )
@@ -69,7 +69,7 @@ class RecEvaluator(object):
                     )
             if neighbor in recommendations:
                 hits += 1
-            G.AddEdge(entity_id, neighbor)
+            G.add_edge(entity_id, neighbor)
 
         return hits / len(neighbors)
 
@@ -80,9 +80,9 @@ class RecEvaluator(object):
         """
         cumulative_eval_score = 0.0
         cumulative_degree = 0
-        graph_entities = get_graph_entities(self._recommender._G)
+        graph_entities = self._recommender._G.get_entities()
         for entity_id in graph_entities:
-            neighbors = get_neighbors(self._recommender._G, entity_id)
+            neighbors = self._recommender._G.get_neighbors(entity_id)
             if len(neighbors) <= 1:
                 # We can't evaluate an entity with one or no edges.
                 continue

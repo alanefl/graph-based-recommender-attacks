@@ -49,7 +49,13 @@ class EIGraph(object):
     def add_edge(self, nid1, nid2):
         """Adds an edge between nodes with IDs `nid1` and `nid2`."""
         assert self.nid_is_entity(nid1) != self.nid_is_entity(nid2)
-        self._G.AddEdge(nid1, nid2)
+        res = self._G.AddEdge(nid1, nid2)
+        assert res == -1, res
+
+    def del_edge(self, nid1, nid2):
+        """Removes an edge between nodes with IDs `nid1` and `nid2`."""
+        assert self.nid_is_entity(nid1) != self.nid_is_entity(nid2)
+        self._G.DelEdge(nid1, nid2)
 
     def is_edge(self, nid1, nid2):
         """Returns whether there is an edge between nodes with IDs `nid1`
@@ -112,6 +118,29 @@ class EIGraph(object):
         """Returns whether the graph contains the given `item_id`."""
         assert self.nid_is_item(item_id)
         return self._G.IsNode(item_id)
+
+    def save(self, filename):
+        """Save this graph in binary format to the given `filename`."""
+        FOut = snap.TFOut(filename)
+        self.base().Save(FOut)
+        FOut.Flush()
+
+    @staticmethod
+    def load(filename):
+        """Loads an EIGraph from the given `filename`."""
+        FIn = snap.TFIn(filename)
+        G = snap.TUNGraph.Load(FIn)
+
+        graph = EIGraph()
+        graph._G = G
+        for node in G.Nodes():
+            if EIGraph.nid_is_entity(node.GetId()):
+                graph.num_entities += 1
+            else:
+                assert EIGraph.nid_is_item(node.GetId())
+                graph.num_items += 1
+
+        return graph
 
     @staticmethod
     def nid_is_entity(node_id):
