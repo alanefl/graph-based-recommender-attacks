@@ -88,18 +88,26 @@ class ErdosRenyiLoader(NetworkLoader):
 
 class DataFileLoader(NetworkLoader):
 
+    EXTENSION = '.dat'
+
     def __init__(self, filename):
-        filename = os.path.join(os.path.dirname(__file__), filename)
-        self.filename = filename
-        if not os.path.exists(filename):
+        full_filename = os.path.join(os.path.dirname(__file__), filename)
+        self.filename = full_filename + DataFileLoader.EXTENSION
+        if not os.path.exists(self.filename):
             raise Exception(
-                "{} does not exist, please load the corresponding data "
-                "via gbra/data/scripts/".format(filename))
+                "{fn} does not exist, please load the corresponding data by"
+                " executing:\n"
+                "gbra/data/scripts/generate_{fn}.sh".format(fn=filename))
 
     def load(self):
         return EIGraph.load(self.filename)
 
 class MovielensLoader(DataFileLoader):
+    """Loads the small Movielens dataset.
+
+    For more info, see:
+    http://files.grouplens.org/datasets/movielens/ml-1m-README.txt
+    """
 
     def __init__(self):
-        super(MovielensLoader, self).__init__('movielens.graph')
+        super(MovielensLoader, self).__init__('movielens')

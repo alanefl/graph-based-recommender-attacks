@@ -1,5 +1,6 @@
 """Defines a general-purpose Entity-Item graph object."""
 
+import marshal
 import random
 import snap
 
@@ -28,6 +29,8 @@ class EIGraph(object):
         for _ in xrange(num_items):
             self.add_item()
 
+        self._weights = {}  # (entity, item) -> weight
+
     def base(self):
         """Returns the underlying snap TUNGraph."""
         return self._G
@@ -46,15 +49,26 @@ class EIGraph(object):
         self.num_items += 1
         return new_id
 
-    def add_edge(self, nid1, nid2):
-        """Adds an edge between nodes with IDs `nid1` and `nid2`."""
+    def _order_ei(self, nid1, nid2):
+        """Return a tuple (entity, item) from `nid1`, `nid2`."""
+        if self.nid_is_entity(nid2):
+            return nid2, nid1
+        return nid1, nid2
+
+    def add_edge(self, nid1, nid2, weight=1):
+        """Adds an edge between nodes with IDs `nid1` and `nid2`.
+
+        :param - weight: (default 1), specifies a weight for the edge
+        """
         assert self.nid_is_entity(nid1) != self.nid_is_entity(nid2)
+        self._weights[self._order_ei(nid1, nid2)] = weight
         res = self._G.AddEdge(nid1, nid2)
         assert res == -1, res
 
     def del_edge(self, nid1, nid2):
         """Removes an edge between nodes with IDs `nid1` and `nid2`."""
         assert self.nid_is_entity(nid1) != self.nid_is_entity(nid2)
+        del self._weights[self._order_ei(nid1, nid2)]
         self._G.DelEdge(nid1, nid2)
 
     def is_edge(self, nid1, nid2):
@@ -62,6 +76,11 @@ class EIGraph(object):
         and `nid2`.
         """
         return self._G.IsEdge(nid1, nid2)
+
+    def get_edge_weight(self, nid1, nid2):
+        """Return the weight of the edge connected `nid1` and `nid2`."""
+        assert self.is_edge(nid1, nid2)
+        return self._weights[self._order_ei(nid1, nid2)]
 
     def get_items(self):
         """Returns a TIntSet containing the nodeIds
@@ -102,9 +121,7 @@ class EIGraph(object):
 
         :param Node: can be a snap node or an int ID.
         """
-        if isinstance(node, int):
-            node = self._G.GetNI(node)
-        neighbors = list(node.GetOutEdges())
+        neighbors = self.get_neighbors(node)
         if not neighbors:
             raise ValueError("Node has no neighbors")
         return self._G.GetNI(random.choice(neighbors))
@@ -119,11 +136,23 @@ class EIGraph(object):
         assert self.nid_is_item(item_id)
         return self._G.IsNode(item_id)
 
+    @staticmethod
+    def _get_meta_filename(filename):
+        return filename + '.ei_meta'
+
     def save(self, filename):
-        """Save this graph in binary format to the given `filename`."""
+        """Save this graph in binary format to the given `filename`.
+
+        In order to store metadata associated with this the EIGraph
+        object, we save an extra file, with the name `filename + '.ei_meta'`.
+        """
         FOut = snap.TFOut(filename)
         self.base().Save(FOut)
         FOut.Flush()
+        meta_fn = self._get_meta_filename(filename)
+
+        with open(meta_fn, 'w') as fout:
+            marshal.dump(self._weights, fout)
 
     @staticmethod
     def load(filename):
@@ -139,6 +168,9 @@ class EIGraph(object):
             else:
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
+
+        with open(EIGraph._get_meta_filename(filename)) as fout:
+            graph._weights = marshal.load(fout)
 
         return graph
 
