@@ -12,7 +12,7 @@ print("Experiment: Basic Random Walk Tester\n\n")
 # Movie lens  graph with basic random walk.
 movie_lens = MovielensLoader().load()
 recommender = BasicRandomWalkRecommender(
-    movie_lens, num_steps_in_walk=50, alpha=0.30
+    movie_lens, num_steps_in_walk=400, alpha=0.25
 )
 ml_evaluator = RecEvaluator(recommender, verbose=True)
 recs_for_15 = recommender.recommend(entity_id=15, number_of_items=3)

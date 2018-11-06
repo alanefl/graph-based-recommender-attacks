@@ -12,7 +12,7 @@ print("Experiment: Pixie Random Walk Tester\n\n")
 # Movie lens  graph with basic random walk.
 movie_lens = MovielensLoader().load()
 recommender = PixieRandomWalkRecommender(
-    n_p=30, n_v=4, G=movie_lens, num_steps_in_walk=50, alpha=0.30
+    n_p=30, n_v=4, G=movie_lens, num_steps_in_walk=200, alpha=0.25
 )
 ml_evaluator = RecEvaluator(recommender, verbose=True)
 recs_for_15 = recommender.recommend(entity_id=15, number_of_items=3)

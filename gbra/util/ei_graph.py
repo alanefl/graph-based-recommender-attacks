@@ -1,8 +1,11 @@
 """Defines a general-purpose Entity-Item graph object."""
 
 import marshal
+import numpy as np
 import random
 import snap
+
+from gbra.util.math_utils import weighted_choice
 
 class EIGraph(object):
     """An Entity-Item Graph.
@@ -116,15 +119,33 @@ class EIGraph(object):
             node = self._G.GetNI(node)
         return list(node.GetOutEdges())
 
-    def get_random_neighbor(self, node):
+    def get_random_neighbor(self, node, use_weights=False):
         """Returns a random neighbor of node in this graph as a Snap Node.
 
         :param Node: can be a snap node or an int ID.
+        :param use_weights: If true, weighs the random choice based on the
+            weight of the edge between the current node and its neighbors.
+            This makes the code many times slower.
         """
         neighbors = self.get_neighbors(node)
         if not neighbors:
             raise ValueError("Node has no neighbors")
-        return self._G.GetNI(random.choice(neighbors))
+
+        if not use_weights:
+            return self._G.GetNI(random.choice(neighbors))
+
+        weights = []
+        if not isinstance(node, int):
+            node = node.GetId()
+
+        weight_sum = 0.0
+        for neighbor in neighbors:
+            curr_edge_weight = self.get_edge_weight(node, neighbor)
+            weight_sum += curr_edge_weight
+            weights.append(curr_edge_weight)
+
+        draw = weighted_choice(neighbors, weights, weight_sum)
+        return self._G.GetNI(draw)
 
     def has_entity(self, entity_id):
         """Returns whether the graph contains the given `entity_id`."""
@@ -151,7 +172,7 @@ class EIGraph(object):
         FOut.Flush()
         meta_fn = self._get_meta_filename(filename)
 
-        with open(meta_fn, 'w') as fout:
+        with open(meta_fn, 'wb') as fout:
             marshal.dump(self._weights, fout)
 
     @staticmethod
@@ -169,7 +190,7 @@ class EIGraph(object):
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
 
-        with open(EIGraph._get_meta_filename(filename)) as fout:
+        with open(EIGraph._get_meta_filename(filename), 'rb') as fout:
             graph._weights = marshal.load(fout)
 
         return graph
