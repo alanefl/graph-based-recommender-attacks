@@ -1,4 +1,4 @@
-"""Utliities for probability/math operations"""
+"""Utlities for probability/math operations"""
 
 import random
 
