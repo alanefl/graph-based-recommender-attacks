@@ -116,7 +116,7 @@ dmypy.json
 .vscode/
 snap-*
 
-# datasets (TODO have a ignored dataset subfolder)
+# datasets (TODO have an ignored dataset subfolder)
 gbra/data/beeradvocate.dat
 gbra/data/beeradvocate.dat.ei_meta
 gbra/data/movielens.dat
