@@ -118,4 +118,5 @@ snap-*
 
 # Graphs
 *.dat
+*.dat.*
 *.graph
