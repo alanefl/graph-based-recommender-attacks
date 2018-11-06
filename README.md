@@ -26,17 +26,18 @@ and documentation files live in the outer level of the repo.
     instantiating them as graphs.
     - `gbra/feature_extraction`: contains classes and routines for extracting
     features from graphs.
+    - `gbra/util`: contains utility functions such as `EIGraph`, an abstraction
+    for Entity-Item graphs, and some useful asserts.
 
-- `*_exp.py`: experiment files.  To maintain some order on the
+- `exp_*.py`: experiment files.  To maintain some order on the
 repo, make a new python file for each separate experiment you plan to run,
-then run it as `python <experiment name>_exp.py` from `gbra/`. Add
+then run it as `python exp_<experiment name>.py` from `gbra/`. Add
 all graphing code to its corresponding experiment file.
 - Utility logic for each submodule lives in `gbra/util/<submodule>_utils.py`.
-- Global utilities live at `gbra/utils/utils.py`.
 
 ## Quick Start
 
  1. Create a Python 2 virtual environment and activate it.
  2. Install SNAP from within that virtual environment
- 3. `python sample_exp.py`
+ 3. `python exp_sample.py`
  4. Profit

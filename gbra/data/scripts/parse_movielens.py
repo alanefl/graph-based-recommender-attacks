@@ -1,4 +1,7 @@
-"""Parses movielens data and saves it as an EIGraph"""
+"""Parses movielens data and saves it as an EIGraph.
+
+See the 1M dataset section on https://grouplens.org/datasets/movielens/
+"""
 
 import nose.tools as nt
 from unittest import TestCase
@@ -23,9 +26,11 @@ def main():
             sline = line.strip().split('::')
             user_id = int(sline[0])
             movie_id = int(sline[1])
+            rating = int(sline[2])
             T.assertTrue(user_id >= 1 and user_id <= num_entities, user_id)
             T.assertTrue(movie_id >= 1 and movie_id <= num_items, movie_id)
-            edges.append((user_id, movie_id))
+            T.assertTrue(rating >= 1 and rating <= 5)
+            edges.append((user_id, movie_id, rating))
 
     T.assertEqual(len(edges), num_edges)
 
@@ -41,17 +46,17 @@ def main():
         iid = graph.add_item()
         movie_to_item[i] = iid
 
-    for user_id, movie_id in edges:
+    for user_id, movie_id, rating in edges:
         entity_id = user_to_entity[user_id]
         item_id = movie_to_item[movie_id]
-        graph.add_edge(entity_id, item_id)
+        graph.add_edge(entity_id, item_id, weight=rating)
 
     T.assertEqual(graph.num_entities, num_entities)
     T.assertEqual(graph.num_items, num_items)
     T.assertEqual(graph.base().GetNodes(), num_entities+num_items)
     T.assertEqual(graph.base().GetEdges(), num_edges)
 
-    graph.save('movielens.graph')
+    graph.save('movielens.dat')
 
 if __name__ == '__main__':
     main()
