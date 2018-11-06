@@ -151,7 +151,7 @@ class EIGraph(object):
         FOut.Flush()
         meta_fn = self._get_meta_filename(filename)
 
-        with open(meta_fn, 'w') as fout:
+        with open(meta_fn, 'wb') as fout:
             marshal.dump(self._weights, fout)
 
     @staticmethod

@@ -51,10 +51,15 @@ def main():
         item_id = movie_to_item[movie_id]
         graph.add_edge(entity_id, item_id, weight=rating)
 
+    # sanity check some stats
     T.assertEqual(graph.num_entities, num_entities)
     T.assertEqual(graph.num_items, num_items)
     T.assertEqual(graph.base().GetNodes(), num_entities+num_items)
     T.assertEqual(graph.base().GetEdges(), num_edges)
+
+    T.assertEqual(graph.get_edge_weight(1, 1193*2), 5)
+    T.assertEqual(graph.get_edge_weight(1, 661*2), 3)
+    T.assertEqual(graph.get_edge_weight(3, 1213*2), 2)
 
     graph.save('movielens.dat')
 
