@@ -115,3 +115,7 @@ dmypy.json
 
 .vscode/
 snap-*
+
+# Graphs
+*.dat
+*.graph
