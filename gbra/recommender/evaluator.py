@@ -29,19 +29,16 @@ from gbra import Rnd
 
 class RecEvaluator(object):
 
-    def __init__(self, recommender, num_recs=10, weigh_degrees=False, verbose=False):
+    def __init__(self, recommender, num_recs=10, verbose=False):
         """Recommender system evaluator.
 
         :param recommender: A recommender object.
         :param num_recs: The number of recommendations to give for each
             evaluation step.
-        :param weigh_degrees: Whether to weigh per-entity scores by the degree
-            of that entity.
         """
         self._recommender = recommender
         self._num_recs = num_recs
         self._verbose = verbose
-        self._weigh_degrees = weigh_degrees
 
     def evaluate_at_entity(self, entity_id, neighbors=None):
         """Returns how well the recommender does at predicting items for
@@ -84,15 +81,14 @@ class RecEvaluator(object):
 
     def evaluate_all(self):
         """Returns the sum of evaluation scores for every single entity
-        in the graph, normalized by the number of entities in the graph,
-        and weighted by the degree of each entity.
+        in the graph, normalized by the number of entities in the graph.
         """
         return self._evaluate(self._recommender._G.get_entities())
 
     def evaluate_random_sample(self, entity_sample_size=10, quick=False):
         """Returns the sum of recommender evaluation scores for a certain set
-        of randomly sampled entities in the graph, weighted by the degree
-        of each entity. If quick=True, only looks at entities with 20 or less
+        of randomly sampled entities in the graph, normalized by the number of
+        entities. If quick=True, only looks at entities with 20 or less
         items.
         """
         graph_entities = self._recommender._G.get_entities()
@@ -111,10 +107,9 @@ class RecEvaluator(object):
 
     def _evaluate(self, entity_set):
         """Returns sum of recommender evaluation scores for the given set
-        of entities, weighted by the degree of each entity
+        of entities, normalized by the number of entities.
         """
         cumulative_eval_score = 0.0
-        cumulative_degree = 0
         graph_entities = self._recommender._G.get_entities()
         for entity_id in entity_set:
             assert(entity_id % 2 == 1)
@@ -122,16 +117,10 @@ class RecEvaluator(object):
             if len(neighbors) <= 1:
                 # We can't evaluate an entity with one or no edges.
                 continue
-            cumulative_degree += len(neighbors)
             curr_cumulative_eval_score = self.evaluate_at_entity(
                 entity_id, neighbors
             )
 
-            if self._weigh_degrees:
-                curr_cumulative_eval_score *= len(neighbors)
             cumulative_eval_score += curr_cumulative_eval_score
 
-        if self._weigh_degrees:
-            return cumulative_eval_score / cumulative_degree
-        else:
-            return cumulative_eval_score / len(entity_set)
+        return cumulative_eval_score / len(entity_set)
