@@ -24,20 +24,24 @@ import snap
 
 from gbra.util.ei_graph import EIGraph
 from gbra.util.asserts import *
+from gbra.util.print_utils import *
 from gbra import Rnd
 
 class RecEvaluator(object):
 
-    def __init__(self, recommender, num_recs=10, verbose=False):
+    def __init__(self, recommender, num_recs=10, weigh_degrees=False, verbose=False):
         """Recommender system evaluator.
 
         :param recommender: A recommender object.
         :param num_recs: The number of recommendations to give for each
             evaluation step.
+        :param weigh_degrees: Whether to weigh per-entity scores by the degree
+            of that entity.
         """
         self._recommender = recommender
         self._num_recs = num_recs
         self._verbose = verbose
+        self._weigh_degrees = weigh_degrees
 
     def evaluate_at_entity(self, entity_id, neighbors=None):
         """Returns how well the recommender does at predicting items for
@@ -63,13 +67,17 @@ class RecEvaluator(object):
             recommendations = self._recommender.recommend(
                 entity_id, self._num_recs
             )
-            if self._verbose:
-                print(
-                    "At entity %d, target was %d, and recommendations were %s" % \
-                        (entity_id, neighbor, str(recommendations))
-                    )
+            output = "At entity %d, target was %d, and recommendations were %s" % \
+                (entity_id, neighbor, str(recommendations))
+
             if neighbor in recommendations:
                 hits += 1
+                if self._verbose:
+                    print_green(output)
+            else:
+                if self._verbose:
+                    print(output)
+
             G.add_edge(entity_id, neighbor)
 
         return hits / len(neighbors)
@@ -87,8 +95,6 @@ class RecEvaluator(object):
         of each entity. If quick=True, only looks at entities with 20 or less
         items.
         """
-        cumulative_eval_score = 0.0
-        cumulative_degree = 0
         graph_entities = self._recommender._G.get_entities()
         entity_sample = set()
         while entity_sample_size > 0:
@@ -117,8 +123,15 @@ class RecEvaluator(object):
                 # We can't evaluate an entity with one or no edges.
                 continue
             cumulative_degree += len(neighbors)
-            cumulative_eval_score += self.evaluate_at_entity(
+            curr_cumulative_eval_score = self.evaluate_at_entity(
                 entity_id, neighbors
-            ) * len(neighbors)
+            )
 
-        return cumulative_eval_score / cumulative_degree
+            if self._weigh_degrees:
+                curr_cumulative_eval_score *= len(neighbors)
+            cumulative_eval_score += curr_cumulative_eval_score
+
+        if self._weigh_degrees:
+            return cumulative_eval_score / cumulative_degree
+        else:
+            return cumulative_eval_score / len(entity_set)
