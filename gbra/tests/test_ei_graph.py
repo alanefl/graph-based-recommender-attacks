@@ -12,25 +12,28 @@ class TestEIGraph(unittest.TestCase):
     def test_basic(self):
         n_ents = 10
         n_items = 20
-        G = EIGraph(n_ents, n_items)
-        self.assertEqual(G.get_items().Len(), n_items)
-        self.assertEqual(G.get_entities().Len(), n_ents)
+        graph = EIGraph(n_ents, n_items)
+        self.assertEqual(graph.get_items().Len(), n_items)
+        self.assertEqual(graph.get_entities().Len(), n_ents)
 
-        for i in G.get_items():
+        for i in graph.get_items():
             self.assertTrue(EIGraph.nid_is_item(i))
 
-        for e in G.get_entities():
+        for e in graph.get_entities():
             self.assertTrue(EIGraph.nid_is_entity(e))
 
-        G.add_edge(1, 2)
+        graph.add_edge(1, 2)
+        self.assertEqual(1, graph.base().GetEdges())
 
-        self.assertEqual(1, G.base().GetEdges())
+        graph.add_edge(1, 4, weight=2)
+        self.assertEqual(2, graph.get_edge_weight(1, 4))
+        self.assertEqual(2, graph.get_edge_weight(4, 1))
 
     def test_save_load(self):
         graph = EIGraph(2, 2)
         graph.add_edge(1, 2)
         graph.add_edge(1, 4)
-        graph.add_edge(3, 2)
+        graph.add_edge(3, 2, 2)
 
         with tempfile.NamedTemporaryFile(delete=True) as temp_f:
             graph.save(temp_f.name)
@@ -42,6 +45,7 @@ class TestEIGraph(unittest.TestCase):
         self.assertTrue(graph.is_edge(1, 4))
         self.assertTrue(graph.is_edge(3, 2))
         self.assertTrue(graph.base().GetNodes(), 4)
+        self.assertEqual(2, graph.get_edge_weight(3, 2))
 
 if __name__ == '__main__':
     unittest.main()
