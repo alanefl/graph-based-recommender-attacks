@@ -190,8 +190,8 @@ class EIGraph(object):
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
 
-        with open(EIGraph._get_meta_filename(filename), 'rb') as fout:
-            graph._weights = marshal.load(fout)
+        with open(EIGraph._get_meta_filename(filename), 'rb') as fin:
+            graph._weights = marshal.load(fin)
 
         return graph
 

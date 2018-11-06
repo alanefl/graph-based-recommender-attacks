@@ -111,3 +111,15 @@ class MovielensLoader(DataFileLoader):
 
     def __init__(self):
         super(MovielensLoader, self).__init__('movielens')
+
+
+class BeeradvocateLoader(DataFileLoader):
+    """Loads the SNAP BeerAdvocate dataset.
+
+    For more info, see:
+    https://snap.stanford.edu/data/web-BeerAdvocate.html
+    (inspect the HTML)
+    """
+
+    def __init__(self):
+        super(BeeradvocateLoader, self).__init__('beeradvocate')
