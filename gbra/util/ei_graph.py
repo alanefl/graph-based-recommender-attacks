@@ -151,7 +151,7 @@ class EIGraph(object):
         FOut.Flush()
         meta_fn = self._get_meta_filename(filename)
 
-        with open(meta_fn, 'w') as fout:
+        with open(meta_fn, 'wb') as fout:
             marshal.dump(self._weights, fout)
 
     @staticmethod
@@ -169,8 +169,8 @@ class EIGraph(object):
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
 
-        with open(EIGraph._get_meta_filename(filename)) as fout:
-            graph._weights = marshal.load(fout)
+        with open(EIGraph._get_meta_filename(filename), 'rb') as fin:
+            graph._weights = marshal.load(fin)
 
         return graph
 

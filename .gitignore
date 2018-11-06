@@ -115,3 +115,7 @@ dmypy.json
 
 .vscode/
 snap-*
+
+# local copies of datasets
+*.dat
+*.dat.ei_meta
