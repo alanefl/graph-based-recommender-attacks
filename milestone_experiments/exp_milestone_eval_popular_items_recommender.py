@@ -27,7 +27,7 @@ def evaluate_recommender(graph, name, num_recs):
     recommender = PopularItemRecommender(graph, num_popular_items=1000)
     evaluator = RecEvaluator(recommender, num_recs=num_recs, verbose=False)
     score = evaluator.evaluate_random_sample(entity_sample_size=1)
-    print("graph:%s,num_recs:%s,score:%s" % (name, str(num_recs), str(score)))
+    print("graph:%s,num_recs:%s,score:%s,rec:%s" % (name, str(num_recs), str(score), 'popular'))
 
 # top 10 recommendations
 for graph, name in graphs:
