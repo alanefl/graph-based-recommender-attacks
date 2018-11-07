@@ -3,6 +3,8 @@
 # Evaluates the three recommenders we've written on three datasets.
 # Runs experiments forever, since the results are stochastic.
 
+cp milestone_experiments/* .
+
 while :
 do
     # Forever keep running these three experiments.
