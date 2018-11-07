@@ -77,19 +77,19 @@ class RandomRecommender(BaseRecommender):
         if not self._G.has_entity(entity_id):
             raise ValueError("Node with id %d is not in the graph." % entity_id)
 
-        graph_items = self._G.get_items()
+        graph_items = tuple(self._G.get_items())
         entity_node = self._G.base().GetNI(entity_id)
         entity_neighbors = [
             neighborItem for neighborItem in entity_node.GetOutEdges()
         ]
 
         number_of_items = min(
-            number_of_items, graph_items.Len() - len(entity_neighbors)
+            number_of_items, len(graph_items) - len(entity_neighbors)
         )
 
         recommendations = []
         while number_of_items > 0:
-            item = graph_items.GetKey(graph_items.GetRndKeyId(Rnd))
+            item = random.choice(graph_items)
             if item in entity_neighbors or item in recommendations:
                 continue
             recommendations.append(item)
@@ -140,14 +140,14 @@ class PopularItemRecommender(BaseRecommender):
         if not self._G.has_entity(entity_id):
             raise ValueError("Node with id %d is not in the graph." % entity_id)
 
-        graph_items = self._G.get_items()
+        graph_items = tuple(self._G.get_items())
         entity_node = self._G.base().GetNI(entity_id)
         entity_neighbors = [
             neighborItem for neighborItem in entity_node.GetOutEdges()
         ]
 
         number_of_items = min(
-            number_of_items, graph_items.Len() - len(entity_neighbors)
+            number_of_items, len(graph_items) - len(entity_neighbors)
         )
 
         recommendations = []
@@ -165,7 +165,7 @@ class PopularItemRecommender(BaseRecommender):
         # If we still need to recommend some things, let's just do it by randomly
         # sampling all items.
         while number_of_items > 0:
-            item = graph_items.GetKey(graph_items.GetRndKeyId(Rnd))
+            item = random.choice(graph_items)
             if item in entity_neighbors or item in recommendations:
                 continue
             recommendations.append(item)

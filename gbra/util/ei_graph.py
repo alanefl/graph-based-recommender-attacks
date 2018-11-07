@@ -216,9 +216,11 @@ class EIGraph(object):
         for node in G.Nodes():
             if EIGraph.nid_is_entity(node.GetId()):
                 graph.num_entities += 1
+                graph.entities.append(node.GetId())
             else:
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
+                graph.items.append(node.GetId())
 
         with open(EIGraph._get_meta_filename(filename), 'rb') as fin:
             graph._weights = marshal.load(fin)
