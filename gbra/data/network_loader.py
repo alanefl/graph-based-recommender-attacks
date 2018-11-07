@@ -85,7 +85,6 @@ class ErdosRenyiLoader(NetworkLoader):
                 if self.verbose:
                     print entity_node_id, item_node_id
                 graph.add_edge(entity_node_id, item_node_id)
-
         return graph
 
 class DataFileLoader(NetworkLoader):

@@ -53,7 +53,7 @@ class RandomAttacker(BaseAttacker):
                 rating = rating_matrix[i][j]
                 item_id = item_ids[j]
                 self.recommender._attacker_add_edge(entity_id, item_id, rating)
-            self.recommender._attacker_add_edge(entity_id, self.target_item, 100) # TODO: set max rating
+            self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
 
 class AverageAttacker(BaseAttacker):
     """Implementation of AverageBot from [S. Lam, J. Riedl. Shilling Recommender Systems for Fun and Profit]
@@ -75,4 +75,30 @@ class AverageAttacker(BaseAttacker):
                     average_cache[item_id] = graph.get_average_edge_weight(item_id)
                 sample_rating = np.random.normal(average_cache[item_id], 1.1)
                 self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
-            self.recommender._attacker_add_edge(entity_id, self.target_item, 100) # TODO: set max rating
+            self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
+
+class NeighborAttacker(BaseAttacker):
+    """Generates fake reviews on items that are two hops away from the 
+    target item and gives highest-rating reviews to the target item."""
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(NeighborAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose = False):
+        graph = self.recommender._G
+        fake_entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        target_reviewers = graph.get_neighbors(self.target_item)
+        also_reviewed = set()
+        for reviewer in target_reviewers:
+            also_reviewed |= set(graph.get_neighbors(reviewer))
+
+        also_reviewed -= set([self.target_item])
+
+        average_cache = {}
+        for entity_id in fake_entities:
+            item_ids = np.random.choice(list(also_reviewed), min(self.num_fake_ratings - 1, len(also_reviewed)), replace = False)
+            for item_id in item_ids:
+                if item_id not in average_cache:
+                    average_cache[item_id] = graph.get_average_edge_weight(item_id)
+                sample_rating = np.random.normal(average_cache[item_id], 1.1)
+                self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
+            self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
