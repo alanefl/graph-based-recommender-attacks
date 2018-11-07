@@ -121,9 +121,10 @@ class RecEvaluator(object):
 
             neighbors = self._recommender._G.get_neighbors(entity)
 
-            # Let's not look at very high degree nodes in any case.
-            if len(neighbors) > 200:
+            # Let's not look at very high degree or very low degree nodes in any case.
+            if len(neighbors) > 200 or len(neighbors) < 5:
                 continue
+
             if entity not in entity_sample:
                 entity_sample_size -= 1
                 entity_sample.add(entity)
