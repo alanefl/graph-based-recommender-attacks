@@ -134,13 +134,6 @@ class EIGraph(object):
             raise ValueError("Graph has no items")
         return np.random.choice([i for i in self.get_items() if i != excluding], N, replace)
 
-    def get_random_entities(self):
-        """Returns a np.array of entities in the graph"""
-        if self.num_entities == 0:
-            raise ValueError("Graph has no entities")
-
-        return np.random.choice(self.get_entities(), N, replace)
-
     def get_random_neighbor(self, node, use_weights=False):
         """Returns a random neighbor of node in this graph as a Snap Node.
 
