@@ -40,6 +40,21 @@ class RecEvaluator(object):
         self._num_recs = num_recs
         self._verbose = verbose
 
+        # Entities with degree 30 or less.
+        self._quick_entities = []
+
+        # All entities
+        self._entities = []
+
+        # Set up the entities to work with if we require "quick" evaluation
+        # in our samples.
+        for entity in self._recommender._G.get_entities():
+            self._entities.append(entity)
+            neighbors = self._recommender._G.get_neighbors(entity)
+            if len(neighbors) > 30:
+                continue
+            self._quick_entities.append(entity)
+
     def evaluate_at_entity(self, entity_id, neighbors=None):
         """Returns how well the recommender does at predicting items for
         a single entity.
@@ -88,17 +103,20 @@ class RecEvaluator(object):
     def evaluate_random_sample(self, entity_sample_size=10, quick=False):
         """Returns the sum of recommender evaluation scores for a certain set
         of randomly sampled entities in the graph, normalized by the number of
-        entities. If quick=True, only looks at entities with 20 or less
+        entities. If quick=True, only looks at entities with 30 or less
         items.
         """
-        graph_entities = self._recommender._G.get_entities()
+        entities_to_work_with = self._entities if not quick else self._quick_entities
+        if len(entities_to_work_with) < entity_sample_size:
+            print(len(entities_to_work_with), entity_sample_size)
+            raise ValueError(
+                "Not enough entities in graph satisfying quickness property."
+            )
+
         entity_sample = set()
         while entity_sample_size > 0:
-            entity = graph_entities.GetKey(graph_entities.GetRndKeyId(Rnd))
+            entity = np.random.choice(entities_to_work_with)
             assert(entity % 2 == 1)
-            if quick:
-                if len(self._recommender._G.get_neighbors(entity)) > 20:
-                    continue
             if entity not in entity_sample:
                 entity_sample_size -= 1
                 entity_sample.add(entity)

@@ -110,7 +110,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
     Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
     """
 
-    def __init__(self, G, num_steps_in_walk=10, 
+    def __init__(self, G, num_steps_in_walk=10,
             alpha=0.5, verbose=False):
         """
         :param n_p: n_p in Alg 2 in Eskombatchai et al

@@ -78,10 +78,9 @@ class ErdosRenyiLoader(NetworkLoader):
         edges_left = self.num_edges
         while edges_left > 0:
             entity_node_id = 2 * random.randint(0, self.num_entities - 1) + 1
-            item_node_id = 2 * random.randint(0, self.num_items - 1)
+            item_node_id = 2 * random.randint(1, self.num_items - 1)
             if not Graph.is_edge(entity_node_id, item_node_id):
                 edges_left -= 1
-                print entity_node_id, item_node_id
                 Graph.add_edge(entity_node_id, item_node_id)
 
         return Graph
