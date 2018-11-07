@@ -108,6 +108,9 @@ class RandomRecommender(BaseRecommender):
 class PopularItemRecommender(BaseRecommender):
     """Recommender that returns random recommendations from the top K most popular items,
     where an item's popularity is defined as the sum of the weights of all its out edges.
+
+    If top k most popular items are not enough to give recommendations to an entity,
+    the algorithm devolves to random sampling.
     """
 
     def __init__(self, G, num_popular_items=500):
