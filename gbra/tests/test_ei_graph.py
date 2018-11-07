@@ -13,8 +13,8 @@ class TestEIGraph(unittest.TestCase):
         n_ents = 10
         n_items = 20
         graph = EIGraph(n_ents, n_items)
-        self.assertEqual(graph.get_items().Len(), n_items)
-        self.assertEqual(graph.get_entities().Len(), n_ents)
+        self.assertEqual(len(graph.get_items()), n_items)
+        self.assertEqual(len(graph.get_entities()), n_ents)
 
         for i in graph.get_items():
             self.assertTrue(EIGraph.nid_is_item(i))
