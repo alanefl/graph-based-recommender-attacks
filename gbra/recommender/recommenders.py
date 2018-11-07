@@ -44,8 +44,6 @@ class BaseRecommender(object):
 
         Raises an error if the entity is not owned by the attacker.
 
-        TODO: Save weight
-
         :param entity_id: the id of the entity (one end of the edge to add)
         :param item_id: the id of the item (the other end of the edge to add)
         :return: returns the newly-created edge.
