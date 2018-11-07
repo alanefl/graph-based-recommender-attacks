@@ -4,6 +4,7 @@ import marshal
 import numpy as np
 import random
 import snap
+import numpy as np
 
 from gbra.util.math_utils import weighted_choice
 
@@ -25,6 +26,8 @@ class EIGraph(object):
         self._G = snap.TUNGraph.New()
         self.num_entities = 0
         self.num_items = 0
+        self.items = []
+        self.entities = []
 
         for _ in xrange(num_entities):
             self.add_entity()
@@ -43,6 +46,7 @@ class EIGraph(object):
         new_id = self.num_entities * 2 + 1
         self._G.AddNode(new_id)
         self.num_entities += 1
+        self.entities.append(new_id)
         return new_id
 
     def add_item(self):
@@ -50,6 +54,7 @@ class EIGraph(object):
         new_id = (self.num_items + 1) * 2
         self._G.AddNode(new_id)
         self.num_items += 1
+        self.items.append(new_id)
         return new_id
 
     def _order_ei(self, nid1, nid2):
@@ -80,36 +85,29 @@ class EIGraph(object):
         """
         return self._G.IsEdge(nid1, nid2)
 
+    def num_edges(self):
+        return self._G.GetEdges()
+
     def get_edge_weight(self, nid1, nid2):
         """Return the weight of the edge connected `nid1` and `nid2`."""
         assert self.is_edge(nid1, nid2)
         return self._weights[self._order_ei(nid1, nid2)]
 
     def get_items(self):
-        """Returns a TIntSet containing the nodeIds
+        """Returns a set containing the nodeIds
         corresponding to the items in this graph.
 
-        :return: TIntSet containing item nodes
+        :return: set containing item nodes
         """
-        items = snap.TIntSet()
-        for node in self._G.Nodes():
-            nId = node.GetId()
-            if nId % 2 == 0:
-                items.AddKey(nId)
-        return items
+        return set(self.items)
 
     def get_entities(self):
-        """Returns a TIntSet containing the nodeIds
+        """Returns a set containing the nodeIds
         corresponding to the entities in this graph.
 
-        :return: TIntSet containing entity nodes
+        :return: set containing entity nodes
         """
-        entities = snap.TIntSet()
-        for node in self._G.Nodes():
-            nId = node.GetId()
-            if nId % 2 == 1:
-                entities.AddKey(nId)
-        return entities
+        return set(self.entities)
 
     def get_neighbors(self, node):
         """Returns a list containing the node IDs of the neighbors
@@ -118,6 +116,26 @@ class EIGraph(object):
         if isinstance(node, int):
             node = self._G.GetNI(node)
         return list(node.GetOutEdges())
+
+    def get_random_edge(self):
+        """Returns a random (entity, item, weight) pair whose edge
+        exists in the graph.
+        """
+        if self._G.GetEdges() == 0:
+            raise ValueError("Graph has no edges")
+
+        [item] = self.get_random_items(1)
+        while self._G.GetNI(item).GetOutDeg() == 0:
+            [item] = self.get_random_items(1)
+
+        entity = self.get_random_neighbor(item).GetId()
+        return (entity, item, self.get_edge_weight(entity, item))
+
+    def get_random_items(self, N, replace = True, excluding = None):
+        """Returns a np.array of items in the graph"""
+        if self.num_items == 0:
+            raise ValueError("Graph has no items")
+        return np.random.choice([i for i in self.get_items() if i != excluding], N, replace)
 
     def get_random_neighbor(self, node, use_weights=False):
         """Returns a random neighbor of node in this graph as a Snap Node.
@@ -147,6 +165,14 @@ class EIGraph(object):
         draw = weighted_choice(neighbors, weights, weight_sum)
         return self._G.GetNI(draw)
 
+    def get_average_edge_weight(self, node):
+        neighbors = self.get_neighbors(node)
+        if len(neighbors) == 0:
+            raise ValueError("Zero degree node has no average edge weight")
+
+        weights = [self.get_edge_weight(n, node) for n in neighbors]
+        return sum(weights) * 1.0 / len(weights)
+
     def has_entity(self, entity_id):
         """Returns whether the graph contains the given `entity_id`."""
         assert self.nid_is_entity(entity_id)
@@ -156,6 +182,10 @@ class EIGraph(object):
         """Returns whether the graph contains the given `item_id`."""
         assert self.nid_is_item(item_id)
         return self._G.IsNode(item_id)
+
+    def has_node(self, node_id):
+        """Returns whether the graph contains the given `node_id`."""
+        return self._G.IsNode(node_id)
 
     @staticmethod
     def _get_meta_filename(filename):
