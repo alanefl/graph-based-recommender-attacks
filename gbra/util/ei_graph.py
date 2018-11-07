@@ -1,9 +1,12 @@
 """Defines a general-purpose Entity-Item graph object."""
 
 import marshal
+import numpy as np
 import random
 import snap
 import numpy as np
+
+from gbra.util.math_utils import weighted_choice
 
 class EIGraph(object):
     """An Entity-Item Graph.
@@ -138,15 +141,33 @@ class EIGraph(object):
 
         return np.random.choice(self.get_entities(), N, replace)
 
-    def get_random_neighbor(self, node):
+    def get_random_neighbor(self, node, use_weights=False):
         """Returns a random neighbor of node in this graph as a Snap Node.
 
         :param Node: can be a snap node or an int ID.
+        :param use_weights: If true, weighs the random choice based on the
+            weight of the edge between the current node and its neighbors.
+            This makes the code many times slower.
         """
         neighbors = self.get_neighbors(node)
         if not neighbors:
             raise ValueError("Node has no neighbors")
-        return self._G.GetNI(random.choice(neighbors))
+
+        if not use_weights:
+            return self._G.GetNI(random.choice(neighbors))
+
+        weights = []
+        if not isinstance(node, int):
+            node = node.GetId()
+
+        weight_sum = 0.0
+        for neighbor in neighbors:
+            curr_edge_weight = self.get_edge_weight(node, neighbor)
+            weight_sum += curr_edge_weight
+            weights.append(curr_edge_weight)
+
+        draw = weighted_choice(neighbors, weights, weight_sum)
+        return self._G.GetNI(draw)
 
     def get_average_edge_weight(self, node):
         neighbors = self.get_neighbors(node)

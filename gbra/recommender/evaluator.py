@@ -24,6 +24,8 @@ import snap
 
 from gbra.util.ei_graph import EIGraph
 from gbra.util.asserts import *
+from gbra.util.print_utils import *
+from gbra import Rnd
 
 class RecEvaluator(object):
 
@@ -62,33 +64,63 @@ class RecEvaluator(object):
             recommendations = self._recommender.recommend(
                 entity_id, self._num_recs
             )
-            if self._verbose:
-                print(
-                    "At entity %d, target was %d, and recommendations were %s" % \
-                        (entity_id, neighbor, str(recommendations))
-                    )
+            output = "At entity %d, target was %d, and recommendations were %s" % \
+                (entity_id, neighbor, str(recommendations))
+
             if neighbor in recommendations:
                 hits += 1
+                if self._verbose:
+                    print_green(output)
+            else:
+                if self._verbose:
+                    print(output)
+
             G.add_edge(entity_id, neighbor)
 
         return hits / len(neighbors)
 
     def evaluate_all(self):
         """Returns the sum of evaluation scores for every single entity
-        in the graph, normalized by the number of entities in the graph,
-        and weighted by the degree of each entity.
+        in the graph, normalized by the number of entities in the graph.
+        """
+        return self._evaluate(self._recommender._G.get_entities())
+
+    def evaluate_random_sample(self, entity_sample_size=10, quick=False):
+        """Returns the sum of recommender evaluation scores for a certain set
+        of randomly sampled entities in the graph, normalized by the number of
+        entities. If quick=True, only looks at entities with 20 or less
+        items.
+        """
+        graph_entities = self._recommender._G.get_entities()
+        entity_sample = set()
+        while entity_sample_size > 0:
+            entity = graph_entities.GetKey(graph_entities.GetRndKeyId(Rnd))
+            assert(entity % 2 == 1)
+            if quick:
+                if len(self._recommender._G.get_neighbors(entity)) > 20:
+                    continue
+            if entity not in entity_sample:
+                entity_sample_size -= 1
+                entity_sample.add(entity)
+
+        return self._evaluate(entity_sample)
+
+    def _evaluate(self, entity_set):
+        """Returns sum of recommender evaluation scores for the given set
+        of entities, normalized by the number of entities.
         """
         cumulative_eval_score = 0.0
-        cumulative_degree = 0
         graph_entities = self._recommender._G.get_entities()
-        for entity_id in graph_entities:
+        for entity_id in entity_set:
+            assert(entity_id % 2 == 1)
             neighbors = self._recommender._G.get_neighbors(entity_id)
             if len(neighbors) <= 1:
                 # We can't evaluate an entity with one or no edges.
                 continue
-            cumulative_degree += len(neighbors)
-            cumulative_eval_score += self.evaluate_at_entity(
+            curr_cumulative_eval_score = self.evaluate_at_entity(
                 entity_id, neighbors
-            ) * len(neighbors)
+            )
 
-        return cumulative_eval_score / cumulative_degree
+            cumulative_eval_score += curr_cumulative_eval_score
+
+        return cumulative_eval_score / len(entity_set)

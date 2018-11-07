@@ -103,11 +103,16 @@ class BasicRandomWalkRecommender(BaseRecommender):
     Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
     """
 
-    def __init__(self, G, num_steps_in_walk=10, alpha=0.5, verbose=False):
+    def __init__(self, G, num_steps_in_walk=10, 
+            alpha=0.5, verbose=False):
         """
+        :param n_p: n_p in Alg 2 in Eskombatchai et al
+        :param n_v: n_v in Alg 2 in in Eskombatchai et al. The number of
+            items that, if visited at least n_p times each, is sufficient to
+            terminate the algorithm.
         :param - G: snap graph to use in this recommender.
         :param - num_steps_in_walk: N in Eskombatchai et al. The number of steps
-        in the random walk.  Each "step" is counted when an item is hit.
+            in the random walk.  Each "step" is counted when an item is hit.
         :param - alpha: alpha in Eskombatchai et al, in [0, 1]
         """
         if alpha > 1 or alpha < 0:
@@ -176,7 +181,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
             tot_steps += curr_steps
         return V
 
-    def recommend(self, entity_id, number_of_items):
+    def _recommend(self, entity_id, number_of_items, random_walk_func):
         # TODO: it may be a good idea to use better data structures here
         # We want to very quickly get the top_n most visited items
         # in V.  It'd be great if V was already sorted in descending order
@@ -184,7 +189,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
 
         # Do random walk.  V maps item ids to number of times the item was
         # seen in a random walk.
-        V = self._do_basic_random_walk(entity_id)
+        V = random_walk_func(entity_id)
         if self._verbose:
             print("Random walk counts:")
             print(V)
@@ -204,6 +209,75 @@ class BasicRandomWalkRecommender(BaseRecommender):
                 break
         return recommendations
 
-class PixieRecommender(BaseRecommender):
-    # TODO
-    pass
+    def recommend(self, entity_id, number_of_items):
+        return self._recommend(
+            entity_id, number_of_items, random_walk_func=self._do_basic_random_walk
+        )
+
+
+class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
+    """Pixie random walk recommendations.  Based on
+    Algorithm 2 in Eskombatchai et al, 2017, with minor modifications.
+
+    Differences:
+        1) We don't have access to the SampleWalkLength logic presented in the paper
+        2) We don't have proprietary knowledge to determine "personalized neighbors"
+           of an entity.
+    """
+
+    def __init__(self, n_p, n_v, *args, **kwargs):
+        """
+        :param n_p: n_p in Alg 2 in Eskombatchai et al
+        :param n_v: n_v in Alg 2 in in Eskombatchai et al. The number of
+            items that, if visited at least n_p times each, is sufficient to
+            terminate the algorithm.
+        """
+        self._n_p = n_p
+        self._n_v = n_v
+        super(PixieRandomWalkRecommender, self).__init__(*args, **kwargs)
+
+    def _do_pixie_random_walk(self, start_entity):
+        V = {} # Maps items to the number of times we've seen them in random walks.
+        tot_steps = 0
+
+        if self._verbose:
+            print("Starting random walks from entity: %d" % start_entity)
+
+        num_high_visited = 0
+        while tot_steps < self._num_steps_in_walk \
+            and num_high_visited <= self._n_p:
+            curr_entity = self._G.base().GetNI(start_entity)
+            curr_steps = self._sample_walk_length()
+            walk = [str(start_entity)]
+
+            # Let's not go beyond tot_steps.
+            curr_steps = min(curr_steps, self._num_steps_in_walk - tot_steps)
+
+            # curr_entity contains SNAP node of the last traversed entity.
+            # curr_item contains the SNAP node of the last traversed item.
+            for step in range(curr_steps):
+                if step != 0:
+                    curr_entity = self._G.get_random_neighbor(curr_item)
+                    walk.append(str(curr_entity.GetId()))
+
+                curr_item = self._G.get_random_neighbor(curr_entity)
+                walk.append(str(curr_item.GetId()))
+                curr_item_id = curr_item.GetId()
+
+                if curr_item_id not in V:
+                    V[curr_item_id] = 0
+                V[curr_item_id] += 1
+
+                if V[curr_item_id] == self._n_v:
+                    num_high_visited += 1
+
+            if self._verbose:
+                print(' -> '.join(walk))
+
+            tot_steps += curr_steps
+        return V
+
+    def recommend(self, entity_id, number_of_items):
+        return super(PixieRandomWalkRecommender, self)._recommend(
+            entity_id, number_of_items, random_walk_func=self._do_pixie_random_walk
+        )
