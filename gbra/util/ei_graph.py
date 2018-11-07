@@ -85,6 +85,9 @@ class EIGraph(object):
         """
         return self._G.IsEdge(nid1, nid2)
 
+    def num_edges(self):
+        return self._G.GetEdges()
+
     def get_edge_weight(self, nid1, nid2):
         """Return the weight of the edge connected `nid1` and `nid2`."""
         assert self.is_edge(nid1, nid2)
