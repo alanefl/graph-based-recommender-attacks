@@ -43,7 +43,7 @@ class RandomAttacker(BaseAttacker):
         mu, std = self._fit_rating_distribution()
         graph = self.recommender._G
         rating_matrix = np.random.normal(
-            mu, std, (self.num_fake_entities, self.num_fake_ratings - 1)
+            mu, max(std, 0.1), (self.num_fake_entities, self.num_fake_ratings - 1)
         )
         fake_entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
         for i in range(self.num_fake_entities):
