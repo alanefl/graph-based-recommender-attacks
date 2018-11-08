@@ -8,8 +8,8 @@ from gbra.net_analysis.characteristics import print_all_stats
 
 T = unittest.TestCase('__init__')
 
-graph_name, fake_entities, fake_reviews, attacker_name = sys.argv[1:]
-fake_entities = int(fake_entities)
+graph_name, percent_fake_entities, fake_reviews, attacker_name = sys.argv[1:]
+percent_fake_entities = float(fake_entities)
 fake_reviews = int(fake_reviews)
 NUM_RECOMMENDATIONS = 5
 
@@ -17,7 +17,7 @@ loaders = {
     "Movielens":    MovielensLoader(),
     "BeerAdvocate": BeeradvocateLoader(),
     "ErdosRenyi":   ErdosRenyiLoader(num_entities=33387, num_items=66051, num_edges=1571251, verbose=False) 
-                  # matches BeerAdvocate 
+                                     # matches BeerAdvocate 
 }
 network = loaders[graph_name].load()
 recommender = PixieRandomWalkRecommender(
@@ -25,6 +25,8 @@ recommender = PixieRandomWalkRecommender(
 )
 
 [target_item] = network.get_random_items(1)
+
+fake_entities = int(percent_fake_entities * network.num_items)
 
 attackers = {
     "Random" : RandomAttacker(recommender, target_item, fake_entities, fake_reviews, 20),
@@ -35,7 +37,7 @@ attacker = attackers[attacker_name]
 
 print "{}Attack on {} graph with {} fake users and {} fake reviews: ".format(attacker_name, graph_name, fake_entities, fake_reviews)
 
-filename = '.'.join([graph_name, attacker_name, str(fake_entities), str(fake_reviews)])
+filename = '-'.join([attacker_name, graph_name, str(percent_fake_entities), str(fake_reviews)])
 
 print_all_stats(filename, network)
 print "Hit ratio before attack %f" % recommender.calculate_hit_ratio(target_item, NUM_RECOMMENDATIONS, verbose=False)
