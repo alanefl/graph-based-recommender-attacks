@@ -43,13 +43,24 @@ def get_component_distribution(ei_graph):
     snap.GetSccs(ei_graph.base(), components)
     return Counter(c.Len() for c in components)
 
+
+def get_fill(ei_graph):
+    """Returns the fill of `ei_graph`.
+
+    Fill = # edges / # total possible edges
+    """
+    e = ei_graph.base().GetEdges()
+    n = ei_graph.base().GetNodes()
+    return float(e) / (n*n)
+
 def print_basic_stats(name, ei_graph):
     print name
     print 'Entities & {} \\\\'.format(ei_graph.num_entities)
     print 'Items    & {} \\\\'.format(ei_graph.num_items)
     print 'Edges    & {} \\\\'.format(ei_graph.base().GetEdges())
+    print 'Fill     & {:.4f} \\\\'.format(get_fill(ei_graph))
 
-def print_all_network_characteristics(name, ei_graph):
+def print_complex_stats(name, ei_graph):
     plot_degree_distribution(ei_graph, name)
     print 'Diameter       & {} \\\\'.format(get_diameter(ei_graph))
     print 'Cluster Coeff  & 0.0 (always for E-I networks) \\\\'
@@ -58,5 +69,5 @@ def print_all_network_characteristics(name, ei_graph):
 
 def print_all_stats(name, ei_graph):
     print_basic_stats(name, ei_graph)
-    print_all_network_characteristics(name, ei_graph)
+    print_complex_stats(name, ei_graph)
     print ''
