@@ -2,17 +2,16 @@
 import unittest
 
 from gbra.data.network_loader import *
+from gbra.net_analysis.characteristics import print_all_stats
 
 T = unittest.TestCase('__init__')
 
-def print_basic_stats(name, graph):
-    print name
-    print 'Entities: {}'.format(graph.num_entities)
-    print 'Items:    {}'.format(graph.num_items)
-    print 'Edges:    {}'.format(graph.base().GetEdges())
+datasets = [
+    ('ErdosRenyi', ErdosRenyiLoader(
+        num_entities=6040, num_items=3952, num_edges=1000209, verbose=False)),
+    ('Movielens', MovielensLoader()),
+    ('BeerAdvocate', BeeradvocateLoader()),
+]
 
-graph = MovielensLoader().load()
-print_basic_stats('Movielens', graph)
-
-graph = BeeradvocateLoader().load()
-print_basic_stats('BeerAdvocate', graph)
+for name, loader in datasets:
+    print_all_stats(name, loader.load())
