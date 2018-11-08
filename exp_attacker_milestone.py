@@ -9,7 +9,7 @@ from gbra.net_analysis.characteristics import print_all_stats
 T = unittest.TestCase('__init__')
 
 graph_name, percent_fake_entities, fake_reviews, attacker_name = sys.argv[1:]
-percent_fake_entities = float(fake_entities)
+percent_fake_entities = float(percent_fake_entities)
 fake_reviews = int(fake_reviews)
 NUM_RECOMMENDATIONS = 5
 
