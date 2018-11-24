@@ -61,6 +61,27 @@ class BaseRecommender(object):
 
         self._G.add_edge(entity_id, item_id, weight = weight)
 
+    def calculate_hit_ratio(self, target_item, number_of_items, verbose = False):
+        if verbose:
+            print "Calculating hit ratio:"
+        real_entities = self._G.get_entities() - self._attacker_nodes
+        hits = 0
+        count = 0
+        for entity_id in real_entities:
+            if verbose:
+                print "Processing %d/%d" % (count, len(real_entities))
+            try:
+                recommendations = self.recommend(entity_id, number_of_items)
+            except:
+                recommendations = []
+            if target_item in recommendations:
+                hits += 1
+            count += 1
+        ratio = hits * 1.0 / count
+        if verbose:
+            print "Calculated hit ratio: %f" % ratio
+        return ratio
+
     @abstractmethod
     def recommend(self, entity_id, number_of_items):
         """Returns an ordered list of items recommended

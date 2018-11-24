@@ -22,12 +22,13 @@ class EIGraph(object):
     underlying TUNGraph.
     """
 
-    def __init__(self, num_entities=0, num_items=0):
+    def __init__(self, num_entities=0, num_items=0, rating_range=(0, 5)):
         self._G = snap.TUNGraph.New()
         self.num_entities = 0
         self.num_items = 0
         self.items = []
         self.entities = []
+        self.rating_range = rating_range
 
         for _ in xrange(num_entities):
             self.add_entity()
@@ -216,9 +217,11 @@ class EIGraph(object):
         for node in G.Nodes():
             if EIGraph.nid_is_entity(node.GetId()):
                 graph.num_entities += 1
+                graph.entities.append(node.GetId())
             else:
                 assert EIGraph.nid_is_item(node.GetId())
                 graph.num_items += 1
+                graph.items.append(node.GetId())
 
         with open(EIGraph._get_meta_filename(filename), 'rb') as fin:
             graph._weights = marshal.load(fin)

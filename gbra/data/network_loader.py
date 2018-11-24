@@ -57,7 +57,7 @@ class ErdosRenyiLoader(NetworkLoader):
     at random between entities and items.
     """
 
-    def __init__(self, num_entities, num_items, num_edges, verbose=True):
+    def __init__(self, num_entities, num_items, num_edges, verbose=False):
         """
         :param - num_entities: number of entities to include
         :param - num_items: number of items to include
@@ -85,7 +85,6 @@ class ErdosRenyiLoader(NetworkLoader):
                 if self.verbose:
                     print entity_node_id, item_node_id
                 graph.add_edge(entity_node_id, item_node_id)
-
         return graph
 
 class DataFileLoader(NetworkLoader):
