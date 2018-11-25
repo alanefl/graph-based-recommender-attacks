@@ -113,7 +113,6 @@ class RecEvaluator(object):
                 "Not enough entities in graph satisfying quickness property."
             )
 
-
         entity_sample = set()
         while entity_sample_size > 0:
             entity = np.random.choice(entities_to_work_with)
@@ -128,8 +127,6 @@ class RecEvaluator(object):
             if entity not in entity_sample:
                 entity_sample_size -= 1
                 entity_sample.add(entity)
-
-
 
         return self._evaluate(entity_sample)
 
