@@ -119,3 +119,6 @@ snap-*
 # local copies of datasets
 *.dat
 *.dat.ei_meta
+
+# Experiment results
+milestone_rec_eval_results/
