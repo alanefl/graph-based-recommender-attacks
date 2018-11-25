@@ -22,12 +22,13 @@ class EIGraph(object):
     underlying TUNGraph.
     """
 
-    def __init__(self, num_entities=0, num_items=0):
+    def __init__(self, num_entities=0, num_items=0, rating_range=(0, 5)):
         self._G = snap.TUNGraph.New()
         self.num_entities = 0
         self.num_items = 0
         self.items = []
         self.entities = []
+        self.rating_range = rating_range
 
         for _ in xrange(num_entities):
             self.add_entity()

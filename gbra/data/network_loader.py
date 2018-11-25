@@ -57,7 +57,7 @@ class ErdosRenyiLoader(NetworkLoader):
     at random between entities and items.
     """
 
-    def __init__(self, num_entities, num_items, num_edges):
+    def __init__(self, num_entities, num_items, num_edges, verbose=False):
         """
         :param - num_entities: number of entities to include
         :param - num_items: number of items to include
@@ -69,21 +69,23 @@ class ErdosRenyiLoader(NetworkLoader):
         self.num_entities = num_entities
         self.num_items = num_items
         self.num_edges = num_edges
+        self.verbose = verbose
 
     def load(self):
         # TODO: this will take a long time if num_edges is close
         # to num_items/num_entities. If we need to make graphs like this in
         # the future, please update my logic :)
-        Graph = EIGraph(num_entities=self.num_entities, num_items=self.num_items)
+        graph = EIGraph(num_entities=self.num_entities, num_items=self.num_items)
         edges_left = self.num_edges
         while edges_left > 0:
             entity_node_id = 2 * random.randint(0, self.num_entities - 1) + 1
-            item_node_id = 2 * random.randint(1, self.num_items - 1)
-            if not Graph.is_edge(entity_node_id, item_node_id):
+            item_node_id = 2 * random.randint(1, self.num_items)
+            if not graph.is_edge(entity_node_id, item_node_id):
                 edges_left -= 1
-                Graph.add_edge(entity_node_id, item_node_id)
-
-        return Graph
+                if self.verbose:
+                    print entity_node_id, item_node_id
+                graph.add_edge(entity_node_id, item_node_id)
+        return graph
 
 class DataFileLoader(NetworkLoader):
 

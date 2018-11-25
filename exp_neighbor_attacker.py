@@ -1,12 +1,12 @@
 import unittest
 
 from gbra.data.network_loader import TinyTestLoader
-from gbra.attackers.attacker import RandomAttacker
+from gbra.attackers.attacker import NeighborAttacker
 from gbra.recommender.recommenders import BasicRandomWalkRecommender
 
 T = unittest.TestCase('__init__')
 
-print "RandomAttack on TinyTest sanity check"
+print "NeighborAttack on TinyTest sanity check"
 
 tiny_network = TinyTestLoader().load()
 recommender = BasicRandomWalkRecommender(
@@ -20,12 +20,12 @@ initial_edges = tiny_network.num_edges()
 [target_item] = tiny_network.get_random_items(1)
 
 # Initializer attacker
-random_attacker = RandomAttacker(recommender, target_item, 4, 3, 2)
+neighbor_attacker = NeighborAttacker(recommender, target_item, 4, 3)
 
 print "Hit ratio before attack %f" % recommender.calculate_hit_ratio(target_item, 3, verbose = True)
 
 # Attack
-random_attacker.attack()
+neighbor_attacker.attack()
 
 T.assertEqual(tiny_network.num_entities, initial_entities + 4)
 T.assertEqual(tiny_network.num_items, initial_items)
