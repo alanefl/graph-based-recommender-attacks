@@ -5,14 +5,14 @@ import subprocess
 # e.g., for each setting of recommender, graph,
 #  and top_k_recommendations, select N randomly sampled entities
 #  to compute the recommender hit ratio on that entity.
-N = 4 #136
+N = 136
 
-recommenders = ["pixie", "popular"]#, "random"]
+recommenders = ["pixie", "popular", "random"]
 
 # The name of the ErdosRenyi graph is of the form
 # ErdosRenyi_[num entities]_[num items]_[num edges].
-graphs = ["MovieLens"]#, "BeerAdvocate", "ErdosRenyi_6040_3952_1000209"]
-top_k_recommendations = [10]#, 100, 1000]
+graphs = ["MovieLens", "BeerAdvocate", "ErdosRenyi_6040_3952_1000209"]
+top_k_recommendations = [10, 100, 1000]
 
 pids = []
 files = []

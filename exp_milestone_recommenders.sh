@@ -9,7 +9,10 @@ cp milestone_experiments/exp_recommender_milestone_master.py .
 python -u exp_recommender_milestone_master.py
 
 # Clean up
-mkdir milestone_rec_eval_results
+mkdir -p milestone_rec_eval_results
 mv *.milestone_recommender_eval milestone_rec_eval_results/
 rm exp_recommender_milestone.py
 rm exp_recommender_milestone_master.py
+
+# Parse the results.
+python milestone_experiments/exp_milestone_results_parser.py
