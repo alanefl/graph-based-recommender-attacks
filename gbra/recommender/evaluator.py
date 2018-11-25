@@ -44,12 +44,11 @@ class RecEvaluator(object):
         self._quick_entities = []
 
         # All entities
-        self._entities = []
+        self._entities = recommender._G.get_entities()
 
         # Set up the entities to work with if we require "quick" evaluation
         # in our samples.
-        for entity in self._recommender._G.get_entities():
-            self._entities.append(entity)
+        for entity in self._entities:
             neighbors = self._recommender._G.get_neighbors(entity)
             if len(neighbors) > 30:
                 continue
@@ -107,6 +106,7 @@ class RecEvaluator(object):
         items.
         """
         entities_to_work_with = self._entities if not quick else self._quick_entities
+        entities_to_work_with = list(entities_to_work_with)
         if len(entities_to_work_with) < entity_sample_size:
             print(len(entities_to_work_with), entity_sample_size)
             raise ValueError(
