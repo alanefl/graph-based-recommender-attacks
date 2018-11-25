@@ -98,23 +98,100 @@ class RandomRecommender(BaseRecommender):
         if not self._G.has_entity(entity_id):
             raise ValueError("Node with id %d is not in the graph." % entity_id)
 
-        graph_items = self._G.get_items()
+        graph_items = tuple(self._G.get_items())
         entity_node = self._G.base().GetNI(entity_id)
         entity_neighbors = [
             neighborItem for neighborItem in entity_node.GetOutEdges()
         ]
 
         number_of_items = min(
-            number_of_items, graph_items.Len() - len(entity_neighbors)
+            number_of_items, len(graph_items) - len(entity_neighbors)
         )
 
         recommendations = []
         while number_of_items > 0:
-            item = graph_items.GetKey(graph_items.GetRndKeyId(Rnd))
+            item = random.choice(graph_items)
             if item in entity_neighbors or item in recommendations:
                 continue
             recommendations.append(item)
             number_of_items -= 1
+        return recommendations
+
+class PopularItemRecommender(BaseRecommender):
+    """Recommender that returns random recommendations from the top K most popular items,
+    where an item's popularity is defined as the sum of the weights of all its out edges.
+
+    If top k most popular items are not enough to give recommendations to an entity,
+    the algorithm devolves to random sampling.
+    """
+
+    def __init__(self, G, num_popular_items=500):
+        """
+        :param G: EIGraph to recommend for.
+        :param num_popular_items: the number of popular items to recommend items from.
+        """
+        super(PopularItemRecommender, self).__init__(G)
+        self._install_popular_items(num_popular_items)
+
+    def _install_popular_items(self, num_items):
+        """Constructs an ordered list of the top "num_items" and stores
+        it as a class variable.  The "top" items are filtered according to the
+        sum of the weights of their out edges.
+        """
+
+        # TODO: if the total number of items is huge, we need to be smarter about this,
+        # i.e., use a min heap for keeping the top k most popular elements.
+        popular_items = []
+
+        items = self._G.get_items()
+        for item in items:
+            neighbors = self._G.get_neighbors(item)
+            total_popularity = 0
+            for neighbor in neighbors:
+                total_popularity += self._G.get_edge_weight(item, neighbor)
+            popular_items.append((item, total_popularity))
+
+        self._popular_items = np.array([
+            i[0] for i in sorted(
+                popular_items, key=lambda x: x[1], reverse=True
+            )[:num_items]
+        ])
+
+    def recommend(self, entity_id, number_of_items):
+        if not self._G.has_entity(entity_id):
+            raise ValueError("Node with id %d is not in the graph." % entity_id)
+
+        graph_items = tuple(self._G.get_items())
+        entity_node = self._G.base().GetNI(entity_id)
+        entity_neighbors = [
+            neighborItem for neighborItem in entity_node.GetOutEdges()
+        ]
+
+        number_of_items = min(
+            number_of_items, len(graph_items) - len(entity_neighbors)
+        )
+
+        recommendations = []
+
+        # Let's permute popular items and scan for recommendations.
+        self._popular_items = np.random.permutation(self._popular_items)
+        for pop_item in self._popular_items:
+            if number_of_items == 0:
+                break
+            if pop_item in entity_neighbors or pop_item in recommendations:
+                continue
+            recommendations.append(pop_item)
+            number_of_items -= 1
+
+        # If we still need to recommend some things, let's just do it by randomly
+        # sampling all items.
+        while number_of_items > 0:
+            item = random.choice(graph_items)
+            if item in entity_neighbors or item in recommendations:
+                continue
+            recommendations.append(item)
+            number_of_items -= 1
+
         return recommendations
 
 class BasicRandomWalkRecommender(BaseRecommender):
@@ -122,7 +199,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
     Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
     """
 
-    def __init__(self, G, num_steps_in_walk=10, 
+    def __init__(self, G, num_steps_in_walk=10,
             alpha=0.5, verbose=False):
         """
         :param n_p: n_p in Alg 2 in Eskombatchai et al
