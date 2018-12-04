@@ -10,6 +10,7 @@ datasets = [
     ('ErdosRenyi', ErdosRenyiLoader(
         num_entities=6040, num_items=3952, num_edges=1000209, verbose=False)),
     ('Movielens', MovielensLoader()),
+    ('Movielens100k', Movielens100kLoader()),
     ('BeerAdvocate', BeeradvocateLoader()),
 ]
 
