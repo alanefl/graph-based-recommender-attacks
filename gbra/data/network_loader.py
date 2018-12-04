@@ -142,14 +142,24 @@ class DataFileLoader(NetworkLoader):
         return EIGraph.load(self.filename)
 
 class MovielensLoader(DataFileLoader):
-    """Loads the small Movielens dataset.
+    """Loads the small Movielens dataset (1M ratings).
 
     For more info, see:
     http://files.grouplens.org/datasets/movielens/ml-1m-README.txt
     """
 
     def __init__(self):
-        super(MovielensLoader, self).__init__('movielens')
+        super(MovielensLoader, self).__init__('movielens_1m')
+
+class Movielens100kLoader(DataFileLoader):
+    """Loads the smaller Movielens dataset (100k ratings).
+
+    For more info, see:
+    http://files.grouplens.org/datasets/movielens/ml-100k-README.txt
+    """
+
+    def __init__(self):
+        super(Movielens100kLoader, self).__init__('movielens_100k')
 
 
 class BeeradvocateLoader(DataFileLoader):
