@@ -6,6 +6,7 @@ import abc
 import os
 import snap
 import random
+import numpy as np
 
 from gbra.util.ei_graph import EIGraph
 
@@ -54,14 +55,17 @@ class ErdosRenyiLoader(NetworkLoader):
     """Erdos-Renyi graph bipartite graph.
 
     Parameterized by NUM_ENTITIES, NUM_ITEMS, and NUM_EDGES chosen uniformly
-    at random between entities and items.
+    at random between entities and items. Can optionally give another existing
+    Graph from which to sample edge weights.
     """
 
-    def __init__(self, num_entities, num_items, num_edges, verbose=False):
+    def __init__(self, num_entities, num_items, num_edges, graph_to_emulate=None, verbose=False):
         """
         :param - num_entities: number of entities to include
         :param - num_items: number of items to include
         :param - num_edges: the number of edges desired.
+        :param - graph_to_emulate: will sample the weight of each edge from
+          the distribution of edge weights in this graph.
         """
         if num_edges > num_entities * num_items:
             raise ValueError("More edges requested than possible.")
@@ -70,6 +74,31 @@ class ErdosRenyiLoader(NetworkLoader):
         self.num_items = num_items
         self.num_edges = num_edges
         self.verbose = verbose
+        self.ratings_dist = None
+        self.possible_ratings = None
+
+        # If emulating a graph, create a self.possible_ratings array
+        # and a self.ratings_dist array in order to sample possible
+        # ratings for this ER graph according the ratings counts in the
+        # graph to emulate.
+        if graph_to_emulate:
+            ratings_to_index = {}
+            self.possible_ratings = graph_to_emulate.possible_ratings
+            for idx, possible_rating in enumerate(self.possible_ratings):
+                ratings_to_index[possible_rating] = idx
+            ratings_counts = [0] * len(self.possible_ratings)
+
+            for edge in graph_to_emulate.base().Edges():
+                srcId, dstId = edge.GetSrcNId(), edge.GetDstNId()
+                edge_weight = graph_to_emulate.get_edge_weight(
+                    srcId, dstId
+                )
+                ratings_counts[ratings_to_index[edge_weight]] += 1
+
+            self.ratings_dist = [
+                float(c) / sum(ratings_counts) for c in ratings_counts
+            ]
+
 
     def load(self):
         # TODO: this will take a long time if num_edges is close
@@ -84,7 +113,16 @@ class ErdosRenyiLoader(NetworkLoader):
                 edges_left -= 1
                 if self.verbose:
                     print entity_node_id, item_node_id
-                graph.add_edge(entity_node_id, item_node_id)
+
+                edge_weight = 1
+
+                # If we have a ratings distribution, add edges to this ER
+                # graph according to that distribution.
+                if self.ratings_dist:
+                    edge_weight = np.random.choice(
+                        self.possible_ratings, p=self.ratings_dist
+                    )
+                graph.add_edge(entity_node_id, item_node_id, weight=edge_weight)
         return graph
 
 class DataFileLoader(NetworkLoader):

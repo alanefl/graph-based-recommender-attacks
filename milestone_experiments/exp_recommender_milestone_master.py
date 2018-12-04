@@ -10,8 +10,12 @@ N = 136
 recommenders = ["pixie", "popular", "random"]
 
 # The name of the ErdosRenyi graph is of the form
-# ErdosRenyi_[num entities]_[num items]_[num edges].
-graphs = ["MovieLens", "BeerAdvocate", "ErdosRenyi_6040_3952_1000209"]
+# ErdosRenyi_[num entities]_[num items]_[num edges]_[graph to draw edge weights from].
+graphs = [
+    "MovieLens",
+    "BeerAdvocate",
+    "ErdosRenyi_6040_3952_1000209_movielens",
+    "ErdosRenyi_33387_66051_1571251_beeradvocate"]
 top_k_recommendations = [10, 100, 1000]
 
 pids = []
@@ -37,7 +41,6 @@ for recommender_name in recommenders:
                     cmd, shell=True, stdout=outputfile
                 )
             )
-            #os.system(cmd + " >> " + filename)
 
 print("Waiting for experiments to finish...")
 for pid, file in zip(pids, files):

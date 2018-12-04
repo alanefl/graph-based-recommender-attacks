@@ -15,10 +15,15 @@ def get_graph(name):
     elif name == "beeradvocate":
         return BeeradvocateLoader().load()
     elif name.startswith("erdosrenyi"):
-        _, entities, items, edges = name.split("_")
+        _, entities, items, edges, emulating_graph_name = name.split("_")
+        assert(emulating_graph_name != "erdosrenyi")
         entities, items, edges = int(entities), int(items), int(edges)
+        emulating_graph = get_graph(emulating_graph_name)
         return ErdosRenyiLoader(
-            num_entities=entities, num_items=items, num_edges=edges
+            num_entities=entities,
+            num_items=items,
+            num_edges=edges,
+            graph=emulating_graph
         ).load()
     else:
         raise ValueError("Unknown graph %s" % name)
