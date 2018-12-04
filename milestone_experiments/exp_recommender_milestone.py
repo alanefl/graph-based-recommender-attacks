@@ -15,15 +15,15 @@ def get_graph(name):
     elif name == "beeradvocate":
         return BeeradvocateLoader().load()
     elif name.startswith("erdosrenyi"):
-        _, entities, items, edges, emulating_graph_name = name.split("_")
-        assert(emulating_graph_name != "erdosrenyi")
+        _, entities, items, edges, graph_to_emulate_name = name.split("_")
+        assert(graph_to_emulate_name != "erdosrenyi")
         entities, items, edges = int(entities), int(items), int(edges)
-        emulating_graph = get_graph(emulating_graph_name)
+        graph_to_emulate = get_graph(graph_to_emulate_name)
         return ErdosRenyiLoader(
             num_entities=entities,
             num_items=items,
             num_edges=edges,
-            graph=emulating_graph
+            graph_to_emulate=graph_to_emulate
         ).load()
     else:
         raise ValueError("Unknown graph %s" % name)
@@ -53,9 +53,14 @@ def get_recommender(name, graph):
         raise ValueError("Unknown recomender %s" % name)
 
 def evaluate_recommender(graph, name, recommender, recommender_name, \
-                        num_recs, entity_sample_size):
+                        num_recs, entity_sample_size, min_score_threshold):
 
-    evaluator = RecEvaluator(recommender, num_recs=num_recs, verbose=False)
+    evaluator = RecEvaluator(
+        recommender,
+        min_score_threshold=min_score_threshold,
+        num_recs=num_recs,
+        verbose=False
+    )
 
     # Run this quickly so that we don't lose experiment output.
     for iter in range(entity_sample_size):
@@ -65,11 +70,12 @@ def evaluate_recommender(graph, name, recommender, recommender_name, \
         ))
 
 # Start experiment
-_, graph_name, recommender_name, k_recs, N = sys.argv
+_, graph_name, recommender_name, k_recs, N, min_score_threshold = sys.argv
 
 k_recs = int(k_recs)
 N = int(N)
 G = get_graph(graph_name)
 R = get_recommender(recommender_name, G)
+min_threshold = float(min_score_threshold)
 
-evaluate_recommender(G, graph_name, R, recommender_name, k_recs, N)
+evaluate_recommender(G, graph_name, R, recommender_name, k_recs, N, min_threshold)
