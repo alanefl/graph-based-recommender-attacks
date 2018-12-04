@@ -72,7 +72,10 @@ class AverageAttacker(BaseAttacker):
             item_ids = graph.get_random_items(self.num_fake_ratings - 1, replace = False, excluding = self.target_item)
             for item_id in item_ids:
                 if item_id not in average_cache:
-                    average_cache[item_id] = graph.get_average_edge_weight(item_id)
+                    try:
+                        average_cache[item_id] = graph.get_average_edge_weight(item_id)
+                    except:
+                        average_cache[item_id] = 0
                 sample_rating = np.random.normal(average_cache[item_id], 1.1)
                 self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
             self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
