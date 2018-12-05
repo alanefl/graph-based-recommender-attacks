@@ -5,9 +5,9 @@ unzip ml-1m.zip
 rm ml-1m.zip
 
 echo 'parsing movielens data'
-python parse_movielens.py
-mv movielens.dat* ../
+python parse_movielens.py 1m
+mv movielens_1m.dat* ../
 rm -r ml-1m
 
-echo 'Finished loading movielens!'
+echo 'Finished loading movielens 1m!'
 popd

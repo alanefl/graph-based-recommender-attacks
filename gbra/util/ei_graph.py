@@ -22,13 +22,15 @@ class EIGraph(object):
     underlying TUNGraph.
     """
 
-    def __init__(self, num_entities=0, num_items=0, rating_range=(0, 5)):
+    def __init__(self, num_entities=0,
+            num_items=0, rating_range=(0, 5), possible_ratings=[0, 1, 2, 3, 4, 5]):
         self._G = snap.TUNGraph.New()
         self.num_entities = 0
         self.num_items = 0
         self.items = []
         self.entities = []
         self.rating_range = rating_range
+        self.possible_ratings = possible_ratings
 
         for _ in xrange(num_entities):
             self.add_entity()
@@ -144,7 +146,7 @@ class EIGraph(object):
         :param Node: can be a snap node or an int ID.
         :param use_weights: If true, weighs the random choice based on the
             weight of the edge between the current node and its neighbors.
-            This makes the code many times slower.
+            WARNING: This makes the code many times slower.
         """
         neighbors = self.get_neighbors(node)
         if not neighbors:
@@ -208,7 +210,8 @@ class EIGraph(object):
 
     @staticmethod
     def load(filename):
-        """Loads an EIGraph from the given `filename`."""
+        """Loads an EIGraph from the given `filename` and the possible
+        ratings."""
         FIn = snap.TFIn(filename)
         G = snap.TUNGraph.Load(FIn)
 
@@ -225,6 +228,14 @@ class EIGraph(object):
 
         with open(EIGraph._get_meta_filename(filename), 'rb') as fin:
             graph._weights = marshal.load(fin)
+            ratings_set = set()
+            for k, v in graph._weights.items():
+                ratings_set.add(v)
+            possible_ratings = sorted(list(ratings_set))
+
+        # Setup the graph with the range of possible ratings.
+        graph.rating_range = (possible_ratings[0], possible_ratings[1])
+        graph.possible_ratings = possible_ratings
 
         return graph
 
