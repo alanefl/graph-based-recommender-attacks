@@ -4,6 +4,8 @@ from scipy import stats
 import snap
 from abc import abstractmethod
 
+from gbra.recommender.recommenders import PixieRandomWalkRecommender
+
 class BaseAttacker(object):
     """Base configurations for an Attacker"""
     def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
@@ -102,3 +104,32 @@ class NeighborAttacker(BaseAttacker):
                 sample_rating = np.random.normal(average_cache[item_id], 1.1)
                 self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
             self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
+
+class WhiteBoxAttacker(BaseAttacker):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(WhiteBoxAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose = False):
+        STEPS_IN_RANDOM_WALK = 1000
+        N_P = 20
+        N_V = 4
+        ALPHA = 0.005
+        network = self.recommender._G
+        random_walker = PixieRandomWalkRecommender(
+            n_p=N_P, n_v=N_V, G=network, num_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA
+        )
+
+        sizes = {}
+        degrees = {}
+        left = len(network.get_items())
+        for item_id in network.get_items():
+            sizes[item_id] = len(random_walker._do_backwards_pixie_random_walk(item_id))
+            degrees[item_id] = len(network.get_neighbors(item_id))
+            print sizes[item_id], degrees[item_id]
+            left -= 1
+            print left
+        from collections import Counter
+        size_counter = Counter(sizes)
+        degree_counter = Counter(degrees)
+        print(size_counter.most_common(10))
+        print(degree_counter.most_common(10))
