@@ -29,16 +29,21 @@ from gbra import Rnd
 
 class RecEvaluator(object):
 
-    def __init__(self, recommender, num_recs=10, verbose=False):
+    def __init__(self, recommender, num_recs=10, min_score_threshold=0, verbose=False):
         """Recommender system evaluator.
 
         :param recommender: A recommender object.
         :param num_recs: The number of recommendations to give for each
             evaluation step.
+        :param min_score_threshold: The minimum rating to consider in
+            evaluation logic.  i.e. if min_score_threshold is 4, the evaluator
+            will only evaluate whether the recommender can re-generate edges
+            to an item that have weight 4 or more.
         """
         self._recommender = recommender
         self._num_recs = num_recs
         self._verbose = verbose
+        self._min_score_threshold = min_score_threshold
 
         # Entities with degree 30 or less.
         self._quick_entities = []
@@ -54,26 +59,26 @@ class RecEvaluator(object):
                 continue
             self._quick_entities.append(entity)
 
-    def evaluate_at_entity(self, entity_id, neighbors=None):
+    def evaluate_at_entity(self, entity_id, neighbors_to_eval=None):
         """Returns how well the recommender does at predicting items for
         a single entity.
 
         :param entity_id: the id of the entity to evaluate at
-        :param neighbors: for performance, can pass in the neighbor items
+        :param neighbors_to_eval: for performance, can pass in the neighbor items
             of this entity.
         :returns: a number between 0 and 1 indicating performance, or None
             if the recommender could not be evaluated at the given entity.
         """
         G = self._recommender._G
-        if neighbors is None:
-            neighbors = G.get_neighbors(entity_id)
+        if neighbors_to_eval is None:
+            neighbors_to_eval = G.get_neighbors(entity_id)
 
-        if len(neighbors) < 1:
+        if len(neighbors_to_eval) < 1:
             # If this neighbor only has a single edge to another item,
             # (or none), we cannot evaluate it using this scheme
             return None
         hits = 0.0
-        for neighbor in neighbors:
+        for neighbor in neighbors_to_eval:
             G.del_edge(entity_id, neighbor)
             recommendations = self._recommender.recommend(
                 entity_id, self._num_recs
@@ -91,7 +96,7 @@ class RecEvaluator(object):
 
             G.add_edge(entity_id, neighbor)
 
-        return hits / len(neighbors)
+        return hits / len(neighbors_to_eval)
 
     def evaluate_all(self):
         """Returns the sum of evaluation scores for every single entity
@@ -139,8 +144,20 @@ class RecEvaluator(object):
         for entity_id in entity_set:
             assert(entity_id % 2 == 1)
             neighbors = self._recommender._G.get_neighbors(entity_id)
+
+            # Only keep this neighbors to which you have an edge with weight
+            # greater than the min score threshold.  This is so that we don't
+            # measure hit ratio for edges that should not be recommended in
+            # the first place.
+            neighbors = [
+                n for n in neighbors \
+                    if self._recommender._G.get_edge_weight(
+                        n, entity_id
+                    ) >= self._min_score_threshold
+            ]
+
             if len(neighbors) <= 1:
-                # We can't evaluate an entity with one or no edges.
+                # We can't evaluate an entity with one or no valid edges.
                 continue
             curr_cumulative_eval_score = self.evaluate_at_entity(
                 entity_id, neighbors

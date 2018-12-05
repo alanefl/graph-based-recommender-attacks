@@ -10,14 +10,19 @@ N = 136
 recommenders = ["pixie", "popular", "random"]
 
 # The name of the ErdosRenyi graph is of the form
-# ErdosRenyi_[num entities]_[num items]_[num edges].
-graphs = ["MovieLens", "BeerAdvocate", "ErdosRenyi_6040_3952_1000209"]
+# ErdosRenyi_[num entities]_[num items]_[num edges]_[graph to draw edge weights from].
+graphs = [
+    (4.0, "MovieLens"),
+    (4.0, "BeerAdvocate"),
+    (4.0, "ErdosRenyi_6040_3952_1000209_movielens")]
+    (4.0, "ErdosRenyi_33387_66051_1571251_beeradvocate")]
+
 top_k_recommendations = [10, 100, 1000]
 
 pids = []
 files = []
 for recommender_name in recommenders:
-    for graph_name in graphs:
+    for min_threshold, graph_name in graphs:
         for k_recs in top_k_recommendations:
 
             filename = '-'.join(
@@ -26,7 +31,7 @@ for recommender_name in recommenders:
             ) + '.milestone_recommender_eval'
 
             cmd = ["python", "-u", "exp_recommender_milestone.py", \
-                    graph_name, recommender_name,str(k_recs), str(N)]
+                    graph_name, recommender_name,str(k_recs), str(N), str(min_threshold)]
 
             outputfile = open(filename, "w")
             files.append(outputfile)
@@ -37,7 +42,6 @@ for recommender_name in recommenders:
                     cmd, shell=True, stdout=outputfile
                 )
             )
-            #os.system(cmd + " >> " + filename)
 
 print("Waiting for experiments to finish...")
 for pid, file in zip(pids, files):

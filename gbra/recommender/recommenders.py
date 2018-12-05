@@ -197,6 +197,10 @@ class PopularItemRecommender(BaseRecommender):
 class BasicRandomWalkRecommender(BaseRecommender):
     """Recommender basic random walk recommendations.  Based on
     Algorithm 1 in Eskombatchai et al, 2017, with minor modifications.
+
+    The random walks here are "weighted" which means at each step,
+    we take a random sample of neighboring nodes to proceed to based on
+    the weights of those nodes.
     """
 
     def __init__(self, G, num_steps_in_walk=10,
@@ -260,10 +264,10 @@ class BasicRandomWalkRecommender(BaseRecommender):
             # curr_item contains the SNAP node of the last traversed item.
             for step in range(curr_steps):
                 if step != 0:
-                    curr_entity = self._G.get_random_neighbor(curr_item)
+                    curr_entity = self._G.get_random_neighbor(curr_item, use_weights=True)
                     walk.append(str(curr_entity.GetId()))
 
-                curr_item = self._G.get_random_neighbor(curr_entity)
+                curr_item = self._G.get_random_neighbor(curr_entity, use_weights=True)
                 walk.append(str(curr_item.GetId()))
                 curr_item_id = curr_item.GetId()
 
@@ -318,7 +322,12 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
     Differences:
         1) We don't have access to the SampleWalkLength logic presented in the paper
         2) We don't have proprietary knowledge to determine "personalized neighbors"
-           of an entity.
+           of an entity. We simply used a weighted random walk based on the
+           neighboring edges.
+
+    The random walks here are "weighted" which means at each step,
+    we take a random sample of neighboring nodes to proceed to based on
+    the weights of those nodes.
     """
 
     def __init__(self, n_p, n_v, *args, **kwargs):
@@ -353,10 +362,10 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
             # curr_item contains the SNAP node of the last traversed item.
             for step in range(curr_steps):
                 if step != 0:
-                    curr_entity = self._G.get_random_neighbor(curr_item)
+                    curr_entity = self._G.get_random_neighbor(curr_item, use_weights=True)
                     walk.append(str(curr_entity.GetId()))
 
-                curr_item = self._G.get_random_neighbor(curr_entity)
+                curr_item = self._G.get_random_neighbor(curr_entity, use_weights=True)
                 walk.append(str(curr_item.GetId()))
                 curr_item_id = curr_item.GetId()
 
