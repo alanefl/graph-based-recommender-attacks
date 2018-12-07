@@ -204,7 +204,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
     """
 
     def __init__(self, G, num_steps_in_walk=10,
-            alpha=0.5, verbose=False):
+            alpha=0.5, beta=10, verbose=False):
         """
         :param n_p: n_p in Alg 2 in Eskombatchai et al
         :param n_v: n_v in Alg 2 in in Eskombatchai et al. The number of
@@ -213,7 +213,10 @@ class BasicRandomWalkRecommender(BaseRecommender):
         :param - G: snap graph to use in this recommender.
         :param - num_steps_in_walk: N in Eskombatchai et al. The number of steps
             in the random walk.  Each "step" is counted when an item is hit.
-        :param - alpha: alpha in Eskombatchai et al, in [0, 1]
+        :param - alpha: parameter for tuning random walk samples in [0, 1]
+        :param - beta: parameter that directly indicates the variance of
+            the random walk samples.
+
         """
         if alpha > 1 or alpha < 0:
             return ValueError("Alpha needs to be between 0 and 1.")
@@ -222,6 +225,7 @@ class BasicRandomWalkRecommender(BaseRecommender):
 
         self._num_steps_in_walk = num_steps_in_walk
         self._alpha = alpha
+        self._beta = beta
         self._verbose = verbose
         super(BasicRandomWalkRecommender, self).__init__(G)
 
@@ -241,8 +245,10 @@ class BasicRandomWalkRecommender(BaseRecommender):
         larger alphas bias towards longer walks.
         """
         mu = int(round(self._alpha * self._num_steps_in_walk))
-        sigma = int(round(self._num_steps_in_walk / float(4)))
+        sigma = self._beta
         sample = int(round(np.random.normal(mu, sigma, 1)[0]))
+
+        # Clip back to desired range.
         return min(max(sample, 1), self._num_steps_in_walk)
 
     def _do_basic_random_walk(self, start_entity):
