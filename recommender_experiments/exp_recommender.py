@@ -52,7 +52,7 @@ def get_recommender(name, graph):
         return PopularItemRecommender(graph, num_popular_items=NUM_POPULAR_ITEMS)
     elif name == "pixie":
         return PixieRandomWalkRecommender(
-            n_p=N_P, n_v=N_V, G=graph, num_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA,
+            n_p=N_P, n_v=N_V, G=graph, max_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA,
             beta=BETA
         )
     else:
