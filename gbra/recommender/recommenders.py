@@ -392,10 +392,10 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
     """
     def _do_backwards_pixie_random_walk(self, start_item):
         def _custom_walk_length(self):
-            mu = int(round(self._alpha * self._num_steps_in_walk))
+            mu = int(round(self._alpha * self.max_steps_in_walk))
             sigma = 3
             sample = int(round(np.random.normal(mu, sigma, 1)[0]))
-            return min(max(sample, 1), self._num_steps_in_walk)
+            return min(max(sample, 1), self.max_steps_in_walk)
 
         V = {} # Maps items to the number of times we've seen them in random walks.
         tot_steps = 0

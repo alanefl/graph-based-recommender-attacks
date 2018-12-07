@@ -30,7 +30,7 @@ attackers = {
 
 def get_attacker(network, recommender, target_item):
     attacker_klass = attackers[ATTACKER_NAME]
-    num_fake_entities = int(percent_fake_entities * network.num_entities)
+    num_fake_entities = int(PERCENT_FAKE_ENTITIES * network.num_entities)
     return attacker_klass(recommender, target_item, num_fake_entities, NUM_FAKE_REVIEWS)
 
 def evaluate_attacker():
