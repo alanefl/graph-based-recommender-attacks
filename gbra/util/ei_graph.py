@@ -240,7 +240,7 @@ class EIGraph(object):
             possible_ratings = sorted(list(ratings_set))
 
         # Setup the graph with the range of possible ratings.
-        graph.rating_range = (0, 5)
+        graph.rating_range = (1, 5)
         graph.possible_ratings = possible_ratings
 
         return graph
