@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 import snap
 from abc import abstractmethod
+from collections import Counter
 
 from gbra.recommender.recommenders import PixieRandomWalkRecommender
 
@@ -17,6 +18,19 @@ class BaseAttacker(object):
     def add_fake_entity(self):
         """Adds a fake entity to the graph and returns the ID"""
         return self.recommender._attacker_add_entity()
+
+    def get_degree_dictionary(self):
+        graph = self.recommender._G
+        name = graph.name
+        try:
+            return np.load(name + '-item-degrees.npy').item()
+        except:
+            graph = self.recommender._G
+            degrees = {}
+            for item_id in graph.get_items():
+                degrees[item_id] = len(graph.get_neighbors(item_id))
+            np.save(name + '-item-degrees.npy', degrees)
+            return degrees
 
     @abstractmethod
     def attack(self, verbose = False):
@@ -105,31 +119,60 @@ class NeighborAttacker(BaseAttacker):
                 self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
             self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
 
-class WhiteBoxAttacker(BaseAttacker):
+
+class LowDegreeAttacker(BaseAttacker):
+    # Ignores _num_fake_ratings
     def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
-        super(WhiteBoxAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+        super(LowDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
 
     def attack(self, verbose = False):
-        STEPS_IN_RANDOM_WALK = 1000
-        N_P = 20
-        N_V = 4
-        ALPHA = 0.005
-        network = self.recommender._G
-        random_walker = PixieRandomWalkRecommender(
-            n_p=N_P, n_v=N_V, G=network, num_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA
-        )
+        degrees = self.get_degree_dictionary()
+        del degrees[self.target_item]
 
-        sizes = {}
-        degrees = {}
-        left = len(network.get_items())
+        degrees = { item_id : (degrees[item_id] * -1) for item_id in degrees if degrees[item_id] != 0}
+        best = [a[0] for a in Counter(degrees).most_common(self.num_fake_entities)]
+        for i in range(self.num_fake_entities):
+            entity = self.add_fake_entity()
+            self.recommender._attacker_add_edge(entity, best[i], 5)
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class HighDegreeAttacker(BaseAttacker):
+    # Ignores _num_fake_ratings
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(HighDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose = False):
+        degrees = self.get_degree_dictionary()
+        del degrees[self.target_item]
+
+        best = [a[0] for a in Counter(degrees).most_common(self.num_fake_entities)]
+        for i in range(self.num_fake_entities):
+            entity = self.add_fake_entity()
+            self.recommender._attacker_add_edge(entity, best[i], 5)
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class HillClimbingAttacker(BaseAttacker):
+    # Standard Hill Climbing Algorithm (white box)
+    # Doesn't take into account weights, ignores _num_fake_ratings
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(HillClimbingAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+    def attack(self, verbose = False):
+        network = self.recommender._G
+        seen = set()
+        chosen = set()
+        neighbors = {}
         for item_id in network.get_items():
-            sizes[item_id] = len(random_walker._do_backwards_pixie_random_walk(item_id))
-            degrees[item_id] = len(network.get_neighbors(item_id))
-            print sizes[item_id], degrees[item_id]
-            left -= 1
-            print left
-        from collections import Counter
-        size_counter = Counter(sizes)
-        degree_counter = Counter(degrees)
-        print(size_counter.most_common(10))
-        print(degree_counter.most_common(10))
+            neighbors[item_id] = set(network.get_neighbors(item_id))
+        del neighbors[self.target_item]
+        while self.num_fake_entities > 0:
+            intersects = Counter({item_id : len(neighbors[item_id] - seen) for item_id in neighbors})
+            [(next_item, count)] = intersects.most_common(1)
+            chosen.add(next_item)
+            seen |= set(neighbors[next_item])
+
+            entity = self.add_fake_entity()
+            self.recommender._attacker_add_edge(entity, next_item, 5)
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+            del neighbors[next_item]
+            self.num_fake_entities -= 1

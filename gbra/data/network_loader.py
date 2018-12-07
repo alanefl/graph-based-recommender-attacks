@@ -105,6 +105,7 @@ class ErdosRenyiLoader(NetworkLoader):
         # to num_items/num_entities. If we need to make graphs like this in
         # the future, please update my logic :)
         graph = EIGraph(num_entities=self.num_entities, num_items=self.num_items)
+        graph.name = "erdos-renyi"
         edges_left = self.num_edges
         while edges_left > 0:
             entity_node_id = 2 * random.randint(0, self.num_entities - 1) + 1
