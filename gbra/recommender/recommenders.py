@@ -203,25 +203,29 @@ class BasicRandomWalkRecommender(BaseRecommender):
     the weights of those nodes.
     """
 
-    def __init__(self, G, num_steps_in_walk=10,
-            alpha=0.5, verbose=False):
+    def __init__(self, G, max_steps_in_walk=10,
+            alpha=0.5, beta=10, verbose=False):
         """
         :param n_p: n_p in Alg 2 in Eskombatchai et al
         :param n_v: n_v in Alg 2 in in Eskombatchai et al. The number of
             items that, if visited at least n_p times each, is sufficient to
             terminate the algorithm.
         :param - G: snap graph to use in this recommender.
-        :param - num_steps_in_walk: N in Eskombatchai et al. The number of steps
-            in the random walk.  Each "step" is counted when an item is hit.
-        :param - alpha: alpha in Eskombatchai et al, in [0, 1]
+        :param - max_steps_in_walk: N in Eskombatchai et al. The number of steps
+            across all random walks from an entity.  Each "step" is counted when an item is hit.
+        :param - alpha: parameter for tuning random walk samples in [0, 1]
+        :param - beta: parameter that directly indicates the variance of
+            the random walk samples.
+
         """
         if alpha > 1 or alpha < 0:
             return ValueError("Alpha needs to be between 0 and 1.")
-        if num_steps_in_walk < 1:
+        if max_steps_in_walk < 1:
             raise ValueError("Steps must be positive integers.")
 
-        self._num_steps_in_walk = num_steps_in_walk
+        self._max_steps_in_walk = max_steps_in_walk
         self._alpha = alpha
+        self._beta = beta
         self._verbose = verbose
         super(BasicRandomWalkRecommender, self).__init__(G)
 
@@ -240,10 +244,12 @@ class BasicRandomWalkRecommender(BaseRecommender):
         Intuitively, smaller alphas bias towards shorter walks, whereas
         larger alphas bias towards longer walks.
         """
-        mu = int(round(self._alpha * self._num_steps_in_walk))
-        sigma = int(round(self._num_steps_in_walk / float(4)))
+        mu = int(round(self._alpha * self._max_steps_in_walk))
+        sigma = self._beta
         sample = int(round(np.random.normal(mu, sigma, 1)[0]))
-        return min(max(sample, 1), self._num_steps_in_walk)
+
+        # Clip back to desired range.
+        return min(max(sample, 1), self._max_steps_in_walk)
 
     def _do_basic_random_walk(self, start_entity):
         V = {} # Maps items to the number of times we've seen them in random walks.
@@ -252,13 +258,13 @@ class BasicRandomWalkRecommender(BaseRecommender):
         if self._verbose:
             print("Starting random walks from entity: %d" % start_entity)
 
-        while tot_steps < self._num_steps_in_walk:
+        while tot_steps < self._max_steps_in_walk:
             curr_entity = self._G.base().GetNI(start_entity)
             curr_steps = self._sample_walk_length()
             walk = [str(start_entity)]
 
             # Let's not go beyond tot_steps.
-            curr_steps = min(curr_steps, self._num_steps_in_walk - tot_steps)
+            curr_steps = min(curr_steps, self._max_steps_in_walk - tot_steps)
 
             # curr_entity contains SNAP node of the last traversed entity.
             # curr_item contains the SNAP node of the last traversed item.
@@ -349,14 +355,14 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
             print("Starting random walks from entity: %d" % start_entity)
 
         num_high_visited = 0
-        while tot_steps < self._num_steps_in_walk \
+        while tot_steps < self._max_steps_in_walk \
             and num_high_visited <= self._n_p:
             curr_entity = self._G.base().GetNI(start_entity)
             curr_steps = self._sample_walk_length()
             walk = [str(start_entity)]
 
             # Let's not go beyond tot_steps.
-            curr_steps = min(curr_steps, self._num_steps_in_walk - tot_steps)
+            curr_steps = min(curr_steps, self._max_steps_in_walk - tot_steps)
 
             # curr_entity contains SNAP node of the last traversed entity.
             # curr_item contains the SNAP node of the last traversed item.

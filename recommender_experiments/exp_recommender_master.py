@@ -3,19 +3,28 @@ import subprocess
 
 # Number of times to run each experiment for each setting
 # e.g., for each setting of recommender, graph,
-#  and top_k_recommendations, select N randomly sampled entities
-#  to compute the recommender hit ratio on that entity.
-N = 136
+# and top_k_recommendations, select N randomly sampled entities
+# to compute the recommender hit ratio on that entity.
+N = 150
 
-recommenders = ["pixie", "popular", "random"]
+recommenders = ["pixie", "random", "popular"]
 
 # The name of the ErdosRenyi graph is of the form
 # ErdosRenyi_[num entities]_[num items]_[num edges]_[graph to draw edge weights from].
 graphs = [
+
+    # MovieLens. Evaluate threshold above 4.
     (4.0, "MovieLens"),
+
+    # BeerAdvocate. Evaluate threshold above 4.
     (4.0, "BeerAdvocate"),
-    (4.0, "ErdosRenyi_6040_3952_1000209_movielens")]
-    (4.0, "ErdosRenyi_33387_66051_1571251_beeradvocate")]
+
+    # ER-MovieLens. Evaluate threshold above 4.
+    (4.0, "ErdosRenyi_6040_3952_1000209_movielens"),
+
+    # ER-BeerAdvocate. Evaluate threshold above 4.
+    (4.0, "ErdosRenyi_33387_66051_1571251_beeradvocate")
+]
 
 top_k_recommendations = [10, 100, 1000]
 
@@ -28,18 +37,18 @@ for recommender_name in recommenders:
             filename = '-'.join(
                 [recommender_name, graph_name, \
                     str(k_recs), str(N)]
-            ) + '.milestone_recommender_eval'
+            ) + '.recommender_eval'
 
-            cmd = ["python", "-u", "exp_recommender_milestone.py", \
+            cmd = ["python", "-u", "exp_recommender.py", \
                     graph_name, recommender_name,str(k_recs), str(N), str(min_threshold)]
 
             outputfile = open(filename, "w")
             files.append(outputfile)
 
-            print("Launched experiment with command: %s" % str(cmd))
+            print("Launched experiment with command: %s" % str(' '.join(cmd)))
             pids.append(
                 subprocess.Popen(
-                    cmd, shell=True, stdout=outputfile
+                    ' '.join(cmd), shell=False, stdout=outputfile
                 )
             )
 

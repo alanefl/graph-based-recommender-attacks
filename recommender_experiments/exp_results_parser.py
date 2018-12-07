@@ -3,13 +3,13 @@
 
 import os
 
-EXP_DIRECTORY = "milestone_rec_eval_results"
+EXP_DIRECTORY = "rec_eval_results"
 
 experiment_sums = {}
 experiment_counts = {}
 
 for filename in os.listdir(EXP_DIRECTORY):
-    if filename.endswith(".milestone_recommender_eval"):
+    if filename.endswith(".recommender_eval"):
         full_path = os.path.join(EXP_DIRECTORY, filename)
         with open(full_path, "r") as results_file:
             for line in results_file:

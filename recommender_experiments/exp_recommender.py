@@ -31,10 +31,15 @@ def get_graph(name):
 # Experiment-wide variables. These are fixed across all experiments.
 
 # For Pixie.
-STEPS_IN_RANDOM_WALK = 30
+STEPS_IN_RANDOM_WALK = 1000
 N_P = 20
 N_V = 4
-ALPHA = 0.20
+
+# In expectation, each random walk is of length 10,
+# but you can get up to 30 in some cases.
+# Reasonable, because the diameter of the graphs are about 8.
+ALPHA = 0.01
+BETA = 20
 
 # For popular Items
 NUM_POPULAR_ITEMS = 1000
@@ -47,7 +52,8 @@ def get_recommender(name, graph):
         return PopularItemRecommender(graph, num_popular_items=NUM_POPULAR_ITEMS)
     elif name == "pixie":
         return PixieRandomWalkRecommender(
-            n_p=N_P, n_v=N_V, G=graph, num_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA
+            n_p=N_P, n_v=N_V, G=graph, num_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA,
+            beta=BETA
         )
     else:
         raise ValueError("Unknown recomender %s" % name)
@@ -63,10 +69,21 @@ def evaluate_recommender(graph, name, recommender, recommender_name, \
     )
 
     # Run this quickly so that we don't lose experiment output.
-    for iter in range(entity_sample_size):
-        score = evaluator.evaluate_random_sample(entity_sample_size=entity_sample_size)
+
+    scores_to_go = entity_sample_size
+    while scores_to_go > 0:
+
+        # For each iteration, only sample 1 entity and evaluate it.
+        score = evaluator.evaluate_random_sample(entity_sample_size=1)
+
+        # If the score is None, we should not count it when we parse result
+        # experiments.
+        if not score:
+            continue
+
+        scores_to_go -= 1
         print("graph:%s,num_recs:%s,score:%s,rec:%s,iter:%d" % (
-            name, str(num_recs), str(score), recommender_name, iter
+            name, str(num_recs), str(score), recommender_name, entity_sample_size - scores_to_go
         ))
 
 # Start experiment
