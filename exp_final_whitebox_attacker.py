@@ -10,7 +10,8 @@ PIXIE_PARAMS = {
     'n_p': 30,
     'n_v': 4,
     'num_steps_in_walk': 1000,
-    'alpha': 0.01
+    'alpha': 0.01,
+    'beta': 20
 }
 RECOMMENDATIONS = 10
 
