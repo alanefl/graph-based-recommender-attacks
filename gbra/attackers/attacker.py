@@ -20,6 +20,7 @@ class BaseAttacker(object):
         return self.recommender._attacker_add_entity()
 
     def get_degree_dictionary(self):
+        """Cache the dictionary of item_id -> degree as a .npy file"""
         graph = self.recommender._G
         name = graph.name
         try:
