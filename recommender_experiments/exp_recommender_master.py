@@ -5,7 +5,7 @@ import subprocess
 # e.g., for each setting of recommender, graph,
 #  and top_k_recommendations, select N randomly sampled entities
 #  to compute the recommender hit ratio on that entity.
-N = 136
+N = 150
 
 recommenders = ["pixie", "popular", "random"]
 
@@ -28,9 +28,9 @@ for recommender_name in recommenders:
             filename = '-'.join(
                 [recommender_name, graph_name, \
                     str(k_recs), str(N)]
-            ) + '.milestone_recommender_eval'
+            ) + '.recommender_eval'
 
-            cmd = ["python", "-u", "exp_recommender_milestone.py", \
+            cmd = ["python", "-u", "exp_recommender.py", \
                     graph_name, recommender_name,str(k_recs), str(N), str(min_threshold)]
 
             outputfile = open(filename, "w")
