@@ -244,13 +244,8 @@ class BasicRandomWalkRecommender(BaseRecommender):
         Intuitively, smaller alphas bias towards shorter walks, whereas
         larger alphas bias towards longer walks.
         """
-<<<<<<< HEAD
-        mu = int(round(self._alpha * self._num_steps_in_walk))
-        sigma = 20
-=======
         mu = int(round(self._alpha * self._max_steps_in_walk))
         sigma = self._beta
->>>>>>> master
         sample = int(round(np.random.normal(mu, sigma, 1)[0]))
 
         # Clip back to desired range.

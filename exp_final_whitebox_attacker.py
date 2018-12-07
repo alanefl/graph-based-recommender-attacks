@@ -9,7 +9,7 @@ ITERATIONS = 10
 PIXIE_PARAMS = {
     'n_p': 30,
     'n_v': 4,
-    'num_steps_in_walk': 200,
+    'num_steps_in_walk': 1000,
     'alpha': 0.01
 }
 RECOMMENDATIONS = 10
