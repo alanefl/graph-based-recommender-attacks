@@ -48,7 +48,7 @@ for recommender_name in recommenders:
             print("Launched experiment with command: %s" % str(' '.join(cmd)))
             pids.append(
                 subprocess.Popen(
-                    ' '.join(cmd), shell=False, stdout=outputfile
+                    ' '.join(cmd), shell=True, stdout=outputfile
                 )
             )
 
