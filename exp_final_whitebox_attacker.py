@@ -49,5 +49,7 @@ def evaluate_attacker():
 
 results = []
 for i in range(ITERATIONS):
-    results.append(evaluate_attacker())
+    (before, after) = evaluate_attacker()
+    print (before, after)
+    results.append((before, after))
 print results
