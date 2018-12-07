@@ -141,6 +141,7 @@ class RecEvaluator(object):
         """
         cumulative_eval_score = 0.0
         graph_entities = self._recommender._G.get_entities()
+        total_evaled = 0
         for entity_id in entity_set:
             assert(entity_id % 2 == 1)
             neighbors = self._recommender._G.get_neighbors(entity_id)
@@ -164,5 +165,8 @@ class RecEvaluator(object):
             )
 
             cumulative_eval_score += curr_cumulative_eval_score
+            total_evaled += 1
 
-        return cumulative_eval_score / len(entity_set)
+        if total_evaled == 0:
+            return None
+        return cumulative_eval_score / float(total_evaled)

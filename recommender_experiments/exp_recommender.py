@@ -69,10 +69,21 @@ def evaluate_recommender(graph, name, recommender, recommender_name, \
     )
 
     # Run this quickly so that we don't lose experiment output.
-    for iter in range(entity_sample_size):
-        score = evaluator.evaluate_random_sample(entity_sample_size=entity_sample_size)
+
+    scores_to_go = entity_sample_size
+    while scores_to_go > 0:
+
+        # For each iteration, only sample 1 entity and evaluate it.
+        score = evaluator.evaluate_random_sample(entity_sample_size=1)
+
+        # If the score is None, we should not count it when we parse result
+        # experiments.
+        if not score:
+            continue
+
+        scores_to_go -= 1
         print("graph:%s,num_recs:%s,score:%s,rec:%s,iter:%d" % (
-            name, str(num_recs), str(score), recommender_name, iter
+            name, str(num_recs), str(score), recommender_name, entity_sample_size - scores_to_go
         ))
 
 # Start experiment
