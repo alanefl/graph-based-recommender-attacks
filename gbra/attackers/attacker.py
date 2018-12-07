@@ -122,7 +122,7 @@ class NeighborAttacker(BaseAttacker):
 
 
 class LowDegreeAttacker(BaseAttacker):
-    # Ignores _num_fake_ratings
+    # _num_fake_ratings is interpreted as per fake user
     def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
         super(LowDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
 
@@ -131,14 +131,18 @@ class LowDegreeAttacker(BaseAttacker):
         del degrees[self.target_item]
 
         degrees = { item_id : (degrees[item_id] * -1) for item_id in degrees if degrees[item_id] != 0}
-        best = [a[0] for a in Counter(degrees).most_common(self.num_fake_entities)]
-        for i in range(self.num_fake_entities):
-            entity = self.add_fake_entity()
-            self.recommender._attacker_add_edge(entity, best[i], 5)
+        sorted_ids = [a[0] for a in Counter(degrees).most_common(len(degrees))]
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
             self.recommender._attacker_add_edge(entity, self.target_item, 5)
 
 class HighDegreeAttacker(BaseAttacker):
-    # Ignores _num_fake_ratings
+    # _num_fake_ratings is interpreted as per fake user
     def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
         super(HighDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
 
@@ -146,10 +150,14 @@ class HighDegreeAttacker(BaseAttacker):
         degrees = self.get_degree_dictionary()
         del degrees[self.target_item]
 
-        best = [a[0] for a in Counter(degrees).most_common(self.num_fake_entities)]
-        for i in range(self.num_fake_entities):
-            entity = self.add_fake_entity()
-            self.recommender._attacker_add_edge(entity, best[i], 5)
+        sorted_ids = [a[0] for a in Counter(degrees).most_common(len(degrees))]
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
             self.recommender._attacker_add_edge(entity, self.target_item, 5)
 
 class HillClimbingAttacker(BaseAttacker):
@@ -160,20 +168,28 @@ class HillClimbingAttacker(BaseAttacker):
     def attack(self, verbose = False):
         network = self.recommender._G
         seen = set()
-        chosen = set()
+        chosen = []
         neighbors = {}
         for item_id in network.get_items():
-            neighbors[item_id] = set(network.get_neighbors(item_id))
+            neighbors[item_id] = set(network.get_neighbors(item_id) + [item_id])
         del neighbors[self.target_item]
-        while self.num_fake_entities > 0:
+        while True: # exits when all nodes are seen
             intersects = Counter({item_id : len(neighbors[item_id] - seen) for item_id in neighbors})
             [(next_item, count)] = intersects.most_common(1)
-            chosen.add(next_item)
+            if (count == 0): 
+                break
+            chosen.append(next_item)
             seen |= set(neighbors[next_item])
-
-            entity = self.add_fake_entity()
-            self.recommender._attacker_add_edge(entity, next_item, 5)
-            self.recommender._attacker_add_edge(entity, self.target_item, 5)
 
             del neighbors[next_item]
             self.num_fake_entities -= 1
+
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, chosen[i % len(chosen)], 5)
+                i += 1
+
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
