@@ -121,4 +121,4 @@ snap-*
 *.dat.ei_meta
 
 # Experiment results
-milestone_rec_eval_results/
+rec_eval_results/
