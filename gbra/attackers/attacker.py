@@ -175,6 +175,8 @@ class HillClimbingAttacker(BaseAttacker):
         del neighbors[self.target_item]
         while True: # exits when all nodes are seen
             intersects = Counter({item_id : len(neighbors[item_id] - seen) for item_id in neighbors})
+            if len(intersects) == 0:
+                break
             [(next_item, count)] = intersects.most_common(1)
             if (count == 0): 
                 break

@@ -1,4 +1,6 @@
+import traceback
 import sys
+import numpy as np
 
 from gbra.data.network_loader import Movielens100kLoader
 from gbra.attackers.attacker import *
@@ -9,7 +11,7 @@ ITERATIONS = 10
 PIXIE_PARAMS = {
     'n_p': 30,
     'n_v': 4,
-    'num_steps_in_walk': 1000,
+    'max_steps_in_walk': 1000,
     'alpha': 0.01,
     'beta': 20
 }
@@ -43,9 +45,12 @@ def evaluate_attacker():
     recommender = PixieRandomWalkRecommender(G=network, **PIXIE_PARAMS)
     attacker = get_attacker(network, recommender, target_item)
 
-    before = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS)
-    attacker.attack()
-    after = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS)
+    before = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS, verbose=True)
+    try:
+        attacker.attack()
+    except:
+        traceback.print_exc()
+    after = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS, verbose=True)
     return (before, after)
 
 results = []
@@ -54,3 +59,8 @@ for i in range(ITERATIONS):
     print (before, after)
     results.append((before, after))
 print results
+
+arr = np.array([a[1] for a in results])
+print "mean: %f, median %f" % (np.mean(arr), np.median(arr))
+
+
