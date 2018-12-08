@@ -194,3 +194,79 @@ class HillClimbingAttacker(BaseAttacker):
 
         for entity in entities:
             self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class BaseRWRAttacker(BaseAttacker):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(BaseRWRAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def get_RWR_dictionary(self, verbose=True):
+        network = self.recommender._G
+        name = network.name
+        try:
+            return np.load(name + '-item-RWR.npy').item()
+        except:
+            STEPS_IN_RANDOM_WALK = 1000
+            N_P = 30
+            N_V = 4
+            ALPHA = 0.01
+            random_walker = PixieRandomWalkRecommender(
+                n_p=N_P, n_v=N_V, G=network, max_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA
+            )
+
+            RWR = {}
+            for item_id in network.get_items():
+                RWR[item_id] = len(random_walker._do_backwards_pixie_random_walk(item_id))
+
+            np.save(name + '-item-RWR.npy', RWR)            
+            return RWR
+
+class DegreeWeightedRWRAttacker(BaseRWRAttacker):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(DegreeWeightedRWRAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose=True):
+        degrees = self.get_degree_dictionary()
+        del degrees[self.target_item]
+
+        RWR = self.get_RWR_dictionary()
+        del RWR[self.target_item]
+
+        for item_id in RWR:
+            if degrees[item_id] > 0:
+                RWR[item_id] = RWR[item_id] * 1.0 / degrees[item_id]
+            else:
+                RWR[item_id] = 0
+
+        sorted_ids = [a[0] for a in Counter(RWR).most_common(len(RWR))]
+        temp = [a[0] for a in Counter(degrees).most_common(len(degrees))]
+        com = []
+        for i in range(len(sorted_ids)):
+            com.append(len(set(sorted_ids[:i]) & set(temp[:i]) ))
+        print com
+
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class RegularRWRAttacker(BaseRWRAttacker):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(RegularRWRAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose=True):
+        RWR = self.get_RWR_dictionary()
+        del RWR[self.target_item]
+
+        sorted_ids = [a[0] for a in Counter(RWR).most_common(len(RWR))]
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)

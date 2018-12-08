@@ -388,6 +388,62 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
             tot_steps += curr_steps
         return V
 
+    def _do_backwards_pixie_random_walk(self, start_item):
+        
+        def reached_threshold(weight_decay_factor, weight_decay, step, stop_threshold):
+            return np.exp(-1.0 * weight_decay_factor * weight_decay * step) > stop_threshold
+
+        V = {} # Maps items to the number of times we've seen them in random walks.
+        tot_steps = 0
+
+        if self._verbose:
+            print("Starting random walks from item: %d" % start_item)
+
+        while tot_steps < self._max_steps_in_walk:
+            curr_item = self._G.base().GetNI(start_item)
+            walk = [str(start_item)]
+
+            weight_decay = 1
+            weight_decay_factor = 0.4
+            stop_threshold = 0.2
+            step = 0
+            # curr_entity contains SNAP node of the last traversed entity.
+            # curr_item contains the SNAP node of the last traversed item.
+            while not reached_threshold(weight_decay_factor, weight_decay, step, stop_threshold):
+                if step != 0:
+                    try:
+                        curr_item = self._G.get_random_neighbor(curr_entity, use_weights=True)
+                    except:
+                        break
+                    walk.append(str(curr_item.GetId()))
+                    weight_decay += ((5 - self._G.get_edge_weight(curr_item.GetId(), curr_entity.GetId())))
+                    if reached_threshold(weight_decay_factor, weight_decay, step, stop_threshold):
+                        break
+                try:
+                    curr_entity = self._G.get_random_neighbor(curr_item, use_weights=True)
+                except:
+                    break
+                walk.append(str(curr_entity.GetId()))
+                curr_entity_id = curr_entity.GetId()
+
+                weight_decay += ((5 - self._G.get_edge_weight(curr_item.GetId(), curr_entity.GetId())))
+                # print self._G.get_edge_weight(curr_item.GetId(), curr_entity.GetId())
+                # print weight_decay, np.exp(-1 * weight_decay_factor * weight_decay * step)
+                if reached_threshold(weight_decay_factor, weight_decay, step, stop_threshold):
+                    break
+
+                if curr_entity_id not in V:
+                    V[curr_entity_id] = 0
+                V[curr_entity_id] += 1
+
+                step += 1
+            if self._verbose:
+                print(' -> '.join(walk))
+
+            tot_steps += step + 1
+            # print "length of walk, ", curr_steps
+        return V
+
     def recommend(self, entity_id, number_of_items):
         return super(PixieRandomWalkRecommender, self)._recommend(
             entity_id, number_of_items, random_walk_func=self._do_pixie_random_walk
