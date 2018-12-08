@@ -95,7 +95,7 @@ class AverageAttacker(BaseAttacker):
             self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
 
 class NeighborAttacker(BaseAttacker):
-    """Generates fake reviews on items that are two hops away from the 
+    """Generates fake reviews on items that are two hops away from the
     target item and gives highest-rating reviews to the target item."""
     def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
         super(NeighborAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
@@ -178,7 +178,7 @@ class HillClimbingAttacker(BaseAttacker):
             if len(intersects) == 0:
                 break
             [(next_item, count)] = intersects.most_common(1)
-            if (count == 0): 
+            if (count == 0):
                 break
             chosen.append(next_item)
             seen |= set(neighbors[next_item])
@@ -194,3 +194,77 @@ class HillClimbingAttacker(BaseAttacker):
 
         for entity in entities:
             self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+
+class BlackBoxRWRAttacker(BaseAttacker):
+    """
+    Approximates RWR each item in the graph and then for each of the
+    top `_num_items_to_scout`, creates a fake entity that adds a high review
+    to that item and to the target item.
+
+    NOTE: doesn't use _num_fake_ratings, always only makes one rating per
+    fake user.
+    """
+
+    def __init__(self, _num_items_to_scout, _num_recs, *args, **kwargs):
+        super(BlackBoxRWRAttacker, self).__init__(*args, **kwargs)
+        self.num_items_to_scout = _num_items_to_scout
+        self.num_recs = _num_recs
+
+    def attack(self, verbose = False):
+        item_to_approx_rwr = self.run_scout()
+
+        max_rating = max(self.recommender._G.rating_range)
+        sorted_items = sorted(
+            item_to_approx_rwr.iteritems(),
+            key=lambda (iid, approx_rwr): approx_rwr, reverse=True
+        )
+
+        for i in range(self.num_fake_entities):
+            fake_entity_id = self.add_fake_entity()
+            item_to_attack = sorted_items[i % len(sorted_items)][0]
+            self.recommender._attacker_add_edge(
+                fake_entity_id, item_to_attack, max_rating
+            )
+            self.recommender._attacker_add_edge(
+                fake_entity_id, self.target_item, max_rating
+            )
+
+    def run_scout(self):
+        scout_id = self.add_fake_entity()
+
+        item_to_approx_rwr = dict(
+            (item, self.approxRWR(scout_id, item))
+            for item, _ in self.get_top_items()
+        )
+        return item_to_approx_rwr
+
+    def get_top_items(self):
+        """Return the top `num_items_to_scout` according to weighted degree
+
+        Weighted degree for an item is the sum of weights of its edges.
+
+        We originally considered shifting the weights to be centered at 0,
+        with the intuition that an item with many negative reviews should
+        have a lower score than one with few, but positive, reviews.
+
+        However -- we decided to stick with just vanilla weighted degree,
+        because it's not clear that such a weighting scheme leads to items
+        with higher RWR.
+        """
+        return sorted(
+            self.recommender._G.get_weighted_item_to_degree().iteritems(),
+            key=lambda (iid, weighted_deg): weighted_deg,
+            reverse=True
+        )[:self.num_items_to_scout]
+
+    def approxRWR(self, entity_id, item_id):
+        max_rating = max(self.recommender._G.rating_range)
+        self.recommender._attacker_add_edge(entity_id, item_id, max_rating)
+        recs = self.recommender.recommend(entity_id, self.num_recs)
+        self.recommender._G.del_edge(entity_id, item_id)
+
+        return sum(
+            self.recommender._G.get_weighted_degree(iid)
+            for iid in recs
+        )
