@@ -2,7 +2,7 @@ import unittest
 T = unittest.TestCase('__init__')
 
 from gbra.recommender.recommenders import PixieRandomWalkRecommender
-from gbra.attackers.attacker import BlackBoxRWRAttacker
+from gbra.attackers.attacker import BlackBoxRWRAttacker, BlackBoxDeepRWRAttacker
 from gbra.data.network_loader import Movielens100kLoader
 
 graph = Movielens100kLoader().load()
@@ -26,6 +26,13 @@ bb_rwr_attacker = BlackBoxRWRAttacker(
     _num_items_to_scout=100, _num_recs=10, _recommender=recommender,
     _target_item=target_item, _num_fake_entities=10, _num_fake_ratings=1
 )
+
+# this takes about 30 minutes to run! making 1000 recommendations takes a while
+# bb_rwr_attacker = BlackBoxDeepRWRAttacker(
+#     _rec_tree_depth=2,
+#     _num_items_to_scout=100, _num_recs=10, _recommender=recommender,
+#     _target_item=target_item, _num_fake_entities=10, _num_fake_ratings=1
+# )
 
 NUM_RECS = 10
 
