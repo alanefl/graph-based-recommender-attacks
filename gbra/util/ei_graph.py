@@ -27,6 +27,7 @@ class EIGraph(object):
         self._G = snap.TUNGraph.New()
         self.num_entities = 0
         self.num_items = 0
+        self.name = None
         self.items = []
         self.entities = []
         self.rating_range = rating_range
@@ -43,6 +44,10 @@ class EIGraph(object):
     def base(self):
         """Returns the underlying snap TUNGraph."""
         return self._G
+
+    def get_name(self):
+        """Returns name of the graph."""
+        return self.name
 
     def add_entity(self):
         """Adds an entity and returns that entity's ID."""
@@ -216,6 +221,7 @@ class EIGraph(object):
         G = snap.TUNGraph.Load(FIn)
 
         graph = EIGraph()
+        graph.name = filename
         graph._G = G
         for node in G.Nodes():
             if EIGraph.nid_is_entity(node.GetId()):
@@ -234,7 +240,7 @@ class EIGraph(object):
             possible_ratings = sorted(list(ratings_set))
 
         # Setup the graph with the range of possible ratings.
-        graph.rating_range = (possible_ratings[0], possible_ratings[1])
+        graph.rating_range = (1, 5)
         graph.possible_ratings = possible_ratings
 
         return graph

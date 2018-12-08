@@ -3,6 +3,9 @@ import numpy as np
 from scipy import stats
 import snap
 from abc import abstractmethod
+from collections import Counter
+
+from gbra.recommender.recommenders import PixieRandomWalkRecommender
 
 class BaseAttacker(object):
     """Base configurations for an Attacker"""
@@ -16,6 +19,20 @@ class BaseAttacker(object):
         """Adds a fake entity to the graph and returns the ID"""
         return self.recommender._attacker_add_entity()
 
+    def get_degree_dictionary(self):
+        """Cache the dictionary of item_id -> degree as a .npy file"""
+        graph = self.recommender._G
+        name = graph.name
+        try:
+            return np.load(name + '-item-degrees.npy').item()
+        except:
+            graph = self.recommender._G
+            degrees = {}
+            for item_id in graph.get_items():
+                degrees[item_id] = len(graph.get_neighbors(item_id))
+            np.save(name + '-item-degrees.npy', degrees)
+            return degrees
+
     @abstractmethod
     def attack(self, verbose = False):
         raise NotImplemented()
@@ -26,7 +43,7 @@ class RandomAttacker(BaseAttacker):
     and applies R to a randomly chosen item that is not the target item. Each fake entity rates the
     target item with the highest rating possible."""
 
-    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings, _num_rating_samples):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings, _num_rating_samples = 20):
         self.num_rating_samples = _num_rating_samples
         super(RandomAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
 
@@ -102,3 +119,78 @@ class NeighborAttacker(BaseAttacker):
                 sample_rating = np.random.normal(average_cache[item_id], 1.1)
                 self.recommender._attacker_add_edge(entity_id, item_id, sample_rating)
             self.recommender._attacker_add_edge(entity_id, self.target_item, graph.rating_range[1])
+
+
+class LowDegreeAttacker(BaseAttacker):
+    # _num_fake_ratings is interpreted as per fake user
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(LowDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose = False):
+        degrees = self.get_degree_dictionary()
+        del degrees[self.target_item]
+
+        degrees = { item_id : (degrees[item_id] * -1) for item_id in degrees if degrees[item_id] != 0}
+        sorted_ids = [a[0] for a in Counter(degrees).most_common(len(degrees))]
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class HighDegreeAttacker(BaseAttacker):
+    # _num_fake_ratings is interpreted as per fake user
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(HighDegreeAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+
+    def attack(self, verbose = False):
+        degrees = self.get_degree_dictionary()
+        del degrees[self.target_item]
+
+        sorted_ids = [a[0] for a in Counter(degrees).most_common(len(degrees))]
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, sorted_ids[i % len(sorted_ids)], 5)
+                i += 1
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
+
+class HillClimbingAttacker(BaseAttacker):
+    # Standard Hill Climbing Algorithm (white box)
+    # Doesn't take into account weights, ignores _num_fake_ratings
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings):
+        super(HillClimbingAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
+    def attack(self, verbose = False):
+        network = self.recommender._G
+        seen = set()
+        chosen = []
+        neighbors = {}
+        for item_id in network.get_items():
+            neighbors[item_id] = set(network.get_neighbors(item_id) + [item_id])
+        del neighbors[self.target_item]
+        while True: # exits when all nodes are seen
+            intersects = Counter({item_id : len(neighbors[item_id] - seen) for item_id in neighbors})
+            if len(intersects) == 0:
+                break
+            [(next_item, count)] = intersects.most_common(1)
+            if (count == 0): 
+                break
+            chosen.append(next_item)
+            seen |= set(neighbors[next_item])
+
+            del neighbors[next_item]
+
+        entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
+        i = 0
+        for j in range(self.num_fake_ratings):
+            for entity in entities:
+                self.recommender._attacker_add_edge(entity, chosen[i % len(chosen)], 5)
+                i += 1
+
+        for entity in entities:
+            self.recommender._attacker_add_edge(entity, self.target_item, 5)
