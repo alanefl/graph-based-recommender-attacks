@@ -43,7 +43,7 @@ class RandomAttacker(BaseAttacker):
     and applies R to a randomly chosen item that is not the target item. Each fake entity rates the
     target item with the highest rating possible."""
 
-    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings, _num_rating_samples):
+    def __init__(self, _recommender, _target_item, _num_fake_entities, _num_fake_ratings, _num_rating_samples = 20):
         self.num_rating_samples = _num_rating_samples
         super(RandomAttacker, self).__init__(_recommender, _target_item, _num_fake_entities, _num_fake_ratings)
 
@@ -184,7 +184,6 @@ class HillClimbingAttacker(BaseAttacker):
             seen |= set(neighbors[next_item])
 
             del neighbors[next_item]
-            self.num_fake_entities -= 1
 
         entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
         i = 0
