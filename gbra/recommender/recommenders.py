@@ -389,9 +389,9 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
         return V
 
     def _do_backwards_pixie_random_walk(self, start_item):
-        
         def reached_threshold(weight_decay_factor, weight_decay, step, stop_threshold):
-            return np.exp(-1.0 * weight_decay_factor * weight_decay * step) > stop_threshold
+            v = np.exp(-1.0 * weight_decay_factor * weight_decay * step) < stop_threshold
+            return v
 
         V = {} # Maps items to the number of times we've seen them in random walks.
         tot_steps = 0
@@ -404,7 +404,7 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
             walk = [str(start_item)]
 
             weight_decay = 1
-            weight_decay_factor = 0.4
+            weight_decay_factor = 0.9
             stop_threshold = 0.2
             step = 0
             # curr_entity contains SNAP node of the last traversed entity.
@@ -441,7 +441,6 @@ class PixieRandomWalkRecommender(BasicRandomWalkRecommender):
                 print(' -> '.join(walk))
 
             tot_steps += step + 1
-            # print "length of walk, ", curr_steps
         return V
 
     def recommend(self, entity_id, number_of_items):
