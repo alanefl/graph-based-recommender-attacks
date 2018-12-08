@@ -53,7 +53,7 @@ def get_attacker(network, recommender, target_item):
             _num_items_to_scout=BLACK_BOX_RWR_NUM_SCOUT_ITEMS,
             _num_recs=RECOMMENDATIONS
         ))
-    elif ATTACKER_NAME = 'BlackBoxDeepRWRAttacker':
+    elif ATTACKER_NAME == 'BlackBoxDeepRWRAttacker':
         kwargs.update(dict(
             _num_items_to_scout=BLACK_BOX_RWR_NUM_SCOUT_ITEMS,
         ))
