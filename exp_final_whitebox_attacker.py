@@ -31,7 +31,9 @@ attackers = {
     'HillClimbingAttacker': HillClimbingAttacker,
     'RandomAttacker': RandomAttacker,
     'AverageAttacker': AverageAttacker,
-    'NeighborAttacker': NeighborAttacker
+    'NeighborAttacker': NeighborAttacker,
+    'RegularRWRAttacker': RegularRWRAttacker,
+    'DegreeWeightedRWRAttacker': DegreeWeightedRWRAttacker
 }
 
 def get_attacker(network, recommender, target_item):
