@@ -1,4 +1,8 @@
 
+
+from collections import defaultdict
+
+import numpy as np
 # import matplotlib.pyplot as plt
 # import networkx as nx
 
@@ -92,8 +96,6 @@ for e in edges:
 # nx.draw(nx_graph, with_labels=True, font_weight='bold', pos=pos)
 # plt.savefig('small_rwr_vis.png')
 
-quit()
-
 
 def make_rec(graph, walk_len):
     # e.g. this is basically a random walk of constant length
@@ -107,26 +109,37 @@ def make_rec(graph, walk_len):
         n_p=N_P, n_v=N_V, G=graph, max_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA,
         beta=BETA)
 
-for wl in [5,20,100,200,500,1000]:
-    print '\n == walk length ', wl
+average_hr = defaultdict(int)
+# wls = [3,5,10,15,20,25,30,40,50,75,100]
+wls = range(3,30) + range(30,60,5)
+for wl in wls:
+    # print '\n == walk length ', wl
     base_rec = make_rec(G, wl)
 
     NUM_RECS = 2
 
     for eid in [1,3,5,7]:
         recs = base_rec.recommend(entity_id=eid, number_of_items=NUM_RECS)
-        print 'recs for eid {}: {}'.format(eid, recs)
+        # print 'recs for eid {}: {}'.format(eid, recs)
 
     hr_before = base_rec.calculate_hit_ratio(target_item, NUM_RECS)
-    print 'hit-ratio before:', hr_before
-    print ' (expect 0, since the target item is disconnected from all other entities)'
+    # print 'hit-ratio before:', hr_before
+    # print ' (expect 0, since the target item is disconnected from all other entities)'
 
-    def do_attack(review_item_id):
-        G.add_edge(fake_user, review_item_id)
+    def do_attack(review_item_ids):
+        for iid in review_item_ids:
+            G.add_edge(fake_user, iid)
         new_rec = make_rec(G, wl)
         hr_after = new_rec.calculate_hit_ratio(target_item, NUM_RECS)
-        print 'hit-ratio (fake user reviews item {}): {}'.format(review_item_id, hr_after)
-        G.del_edge(fake_user, review_item_id)
+        average_hr[tuple(review_item_ids)] += hr_after
+        for iid in review_item_ids:
+            G.del_edge(fake_user, iid)
 
-    for i in [2,4,6]:
+    for i in [[2], [4], [6], [2,4], [2,6], [4,6], [2,4,6]]:
         do_attack(i)
+
+print 'averaged hit-ratio across {} different walk lengths, avg length {}'.format(
+    len(wls), np.mean(wls))
+sorted_hrs = sorted(average_hr.iteritems(), key=lambda(k,v): v, reverse=True)
+for items, hr in sorted_hrs:
+    print 'fake user reviews items {}: {:.2f}'.format(items, float(hr) / len(wls))
