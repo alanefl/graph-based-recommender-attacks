@@ -209,8 +209,9 @@ class BaseRWRAttacker(BaseAttacker):
             N_P = 30
             N_V = 4
             ALPHA = 0.01
+            BETA = 20
             random_walker = PixieRandomWalkRecommender(
-                n_p=N_P, n_v=N_V, G=network, max_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA
+                n_p=N_P, n_v=N_V, G=network, max_steps_in_walk=STEPS_IN_RANDOM_WALK, alpha=ALPHA, beta=BETA
             )
 
             RWR = {}
@@ -238,11 +239,6 @@ class DegreeWeightedRWRAttacker(BaseRWRAttacker):
                 RWR[item_id] = 0
 
         sorted_ids = [a[0] for a in Counter(RWR).most_common(len(RWR))]
-        temp = [a[0] for a in Counter(degrees).most_common(len(degrees))]
-        com = []
-        for i in range(len(sorted_ids)):
-            com.append(len(set(sorted_ids[:i]) & set(temp[:i]) ))
-        print com
 
         entities = [self.add_fake_entity() for i in range(self.num_fake_entities)]
         i = 0
