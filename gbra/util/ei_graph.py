@@ -1,5 +1,6 @@
 """Defines a general-purpose Entity-Item graph object."""
 
+from collections import defaultdict
 import marshal
 import numpy as np
 import random
@@ -32,6 +33,7 @@ class EIGraph(object):
         self.entities = []
         self.rating_range = rating_range
         self.possible_ratings = possible_ratings
+        self.max_rating = max(self.rating_range)
 
         for _ in xrange(num_entities):
             self.add_entity()
@@ -254,3 +256,19 @@ class EIGraph(object):
     def nid_is_item(node_id):
         """Returns whether a given nid is an item."""
         return node_id % 2 == 0 and node_id >= 2
+
+    def get_weighted_degree(self, nid):
+        """
+        The weighted degree of an item is the sum of weights over its edges.
+        """
+        return sum(
+            self._weights[self._order_ei(other_nid, nid)]
+            for other_nid in self.get_neighbors(nid)
+        )
+
+    def get_weighted_item_to_degree(self):
+        """Returns a map of item to weighted degree."""
+        node_to_degree = defaultdict(int)
+        for iid in self.get_items():
+            node_to_degree[iid] += self.get_weighted_degree(iid)
+        return node_to_degree
