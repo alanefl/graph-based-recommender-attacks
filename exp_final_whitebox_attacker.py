@@ -66,7 +66,8 @@ def evaluate_attacker(target_item):
     recommender = PixieRandomWalkRecommender(G=network, **PIXIE_PARAMS)
     attacker = get_attacker(network, recommender, target_item)
 
-    before = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS, verbose=False)
+    # before = recommender.calculate_hit_ratio(target_item, RECOMMENDATIONS, verbose=False)
+    before = 0  # this is basically always true
     try:
         attacker.attack()
     except:
