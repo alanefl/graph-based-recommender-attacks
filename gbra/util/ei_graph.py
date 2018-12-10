@@ -32,7 +32,7 @@ class EIGraph(object):
         self.items = []
         self.entities = []
         self.rating_range = rating_range
-        self.possile_ratings = possible_ratings
+        self.possible_ratings = possible_ratings
         self.max_rating = max(self.rating_range)
 
         for _ in xrange(num_entities):
